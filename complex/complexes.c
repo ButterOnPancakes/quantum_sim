@@ -1,5 +1,9 @@
 #include "complexes.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
 typedef struct complex {
     double real;
     double imag;

@@ -1,10 +1,14 @@
 #include "matrices.h"
 
-typedef struct mat {
+#include <stdlib.h>
+#include <stdio.h>
+#include "../complex/complexes.h"
+
+struct mat {
     int rows;
     int cols;
     Complex **data;
-} Matrix;
+};
 
 Matrix matrix_zero(int rows, int cols) {
     Matrix mat;

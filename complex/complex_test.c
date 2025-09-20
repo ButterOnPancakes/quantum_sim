@@ -1,8 +1,9 @@
+#include "complexes.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
-#include "complexes.h"
 #include "../utils/utils.h"
 
 // Test utilities

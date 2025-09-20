@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "complexes.h"
+#ifndef MATRICES_H
+#define MATRICES_H
 
 typedef struct mat Matrix;
 
@@ -18,3 +16,5 @@ Matrix matrix_tensor_product(Matrix A, Matrix B);
 void matrix_add_override(Matrix *A, Matrix *B);
 void matrix_mult_override(Matrix *A, Matrix *B);
 void matrix_tensor_product_override(Matrix *A, Matrix *B);
+
+#endif
