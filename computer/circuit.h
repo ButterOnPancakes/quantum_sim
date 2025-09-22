@@ -1,9 +1,30 @@
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
-typedef enum { I, X, H, CNOT } GateType;
+#include "../utils/dynarrays/dynarray.h"
 
-typedef struct qcircuit QuantumCircuit;
+typedef enum { ID, X, H, CNOT } GateType;
+
+typedef struct {
+    GateType gt;
+    int params[];
+} Gate;
+
+typedef struct {
+    enum { GATE, MEASURE } type;
+    union {
+        Gate gate;
+        struct {
+            int qbit;
+            int bit;
+        } measure;
+    } operation;
+} Instruction;
+
+typedef struct qcircuit {
+    int n_qbits;
+    DynArray *instructions;
+} QuantumCircuit;
 
 QuantumCircuit *create_circuit(int n_qbits);
 int destroy_circuit(QuantumCircuit *circuit);

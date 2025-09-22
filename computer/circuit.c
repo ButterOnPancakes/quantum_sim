@@ -4,29 +4,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "../utils/dynarrays/dynarray.h"
-
-typedef struct {
-    GateType gt;
-    int params[];
-} Gate;
-
-typedef struct {
-    enum { GATE, MEASURE } type;
-    union {
-        Gate gate;
-        struct {
-            int qbit;
-            int bit;
-        } measure;
-    } operation;
-} Instruction;
-
-struct qcircuit {
-    int n_qbits;
-    DynArray *instructions;
-};
-
 QuantumCircuit *create_circuit(int n_qbits) {
     QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));
     circuit->n_qbits = n_qbits;
@@ -54,8 +31,8 @@ void print_circuit(QuantumCircuit *circuit) {
             }
             else if(instr->type == GATE && instr->operation.gate.params[0] == qbit) {
                 switch(instr->operation.gate.gt) {
-                    case I: printf("|  X  |"); break;
-                    case X: printf("|  I  |"); break;
+                    case ID: printf("|  I  |"); break;
+                    case X: printf("|  X  |"); break;
                     case H: printf("|  H  |"); break;
                     case CNOT: printf("|  +  |"); break;
                 }
