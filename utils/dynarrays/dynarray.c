@@ -83,5 +83,7 @@ void dynarray_add_pointer(DynArray* arr, void* value) {
         return;
     }
     dynarray_resize(arr);
-    arr->data[arr->size++].pointer_val = value;
+    arr->data[arr->size].pointer_val = value;
+
+    arr->size++;
 }
