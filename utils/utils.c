@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int reverse_power(int N) {
     int i = 0;

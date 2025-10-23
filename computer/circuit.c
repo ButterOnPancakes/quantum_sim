@@ -94,6 +94,13 @@ void add_single_qbit_gate(QuantumCircuit *circuit, int row, GateType g) {
     gate->params[0] = row; gate->params[1] = -1;
     list_append(circuit->gates, gate);
 }
+void add_multiple_qbit_gate(QuantumCircuit *circuit, int row, int nb_qbits, GateType g, bool (*f)(int *t, int n)) {
+    Gate *gate = malloc(sizeof(Gate));
+    gate->type = g;
+    gate->params[0] = row; gate->params[1] = nb_qbits;
+    gate->f = f;
+    list_append(circuit->gates, gate);
+}
 void add_double_qbit_gate(QuantumCircuit *circuit, int row, int control, GateType g) {
     assert(g == CNOT);
     Gate *gate = malloc(sizeof(Gate));
@@ -105,13 +112,6 @@ void add_single_qbit_measure(QuantumCircuit *circuit, int row, int output) {
     Gate *gate = malloc(sizeof(Gate));
     gate->type = MEAS;
     gate->params[0] = row; gate->params[1] = output;
-    list_append(circuit->gates, gate);
-}
-void add_multiple_qbit_gate(QuantumCircuit *circuit, int row, int nb_qbits, GateType g, bool (*f)(int *t, int n)) {
-    Gate *gate = malloc(sizeof(Gate));
-    gate->type = g;
-    gate->params[0] = row; gate->params[1] = nb_qbits;
-    gate->f = f;
     list_append(circuit->gates, gate);
 }
 
@@ -195,7 +195,7 @@ Matrix *get_S0_matrix(int n) {
     
     // Add 2|0><0|: set top-left corner to +1 instead of -1
     // This changes the (0,0) element from -1 to +1, net effect: +2 at (0,0)
-    matrix_set(S0, 0, 0, 1.0 + 0.0*I);
+    matrix_set(S0, 0, 0, 1.0);
     
     return S0;
 }

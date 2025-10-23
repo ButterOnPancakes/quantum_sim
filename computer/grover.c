@@ -10,16 +10,16 @@
 #include <time.h>
 
 bool f(int *t, int n) {
-    return t[0] == 1 && t[1] == 1 && t[2] == 1 && t[3] == 1;
+    return t[0] == 1 && t[1] == 1 && t[2] == 1;
 }
 
 int main() {
-    int n = 4;
+    int n = 3;
     int N = fast_exp_i(2, n);
     Matrix *statevector = matrix_zero(N, 1);
     matrix_set(statevector, 0, 0, 1.0);
 
-    int l = ceil(sqrt(N) * M_PI / 4.);
+    int l = floor(sqrt(N) * M_PI / 4.);
 
     QuantumCircuit *qc = create_circuit(n);
 
