@@ -9,8 +9,16 @@ from qiskit.circuit.library import grover_operator, MCMTGate, ZGate, UnitaryGate
 
 from qiskit_aer import AerSimulator
 from qiskit.visualization import plot_histogram
-from qiskit_aer import AerSimulator
- 
+
+def get_matrix(circuit : QuantumCircuit):
+    circ = circuit.copy()
+    circ.save_unitary()
+    simulator = AerSimulator(method = 'unitary')
+    circ = transpile(circ, simulator)
+    result = simulator.run(circ).result()
+    unitary = result.get_unitary(circ)
+    print("Circuit unitary:\n", np.asarray(unitary).round(2))
+
 def phase_oracle(marked_states):
     """Build a Grover oracle for multiple marked states
  
@@ -43,8 +51,7 @@ def phase_oracle(marked_states):
         if zero_inds: qc.x(zero_inds)
         qc.compose(MCMTGate(ZGate(), num_qubits - 1, 1), inplace=True)
         if zero_inds: qc.x(zero_inds)
-    qc.draw(output="mpl")
-    plt.show()
+
     return qc
 
 def diffusion_operator(num_qbits):
@@ -67,7 +74,9 @@ def grover_operator(marked_states):
     op.h(range(op.num_qubits))
     return op
 
-marked_states = ["0101"]
+marked_states = ["110", "111"]
+
+circuit = phase_oracle(marked_states)
 
 grover_op = grover_operator(marked_states)
 grover_op.draw(output="mpl")
@@ -80,8 +89,12 @@ optimal_num_iterations = math.floor(
 qc = QuantumCircuit(grover_op.num_qubits)
 # Create even superposition of all basis states
 qc.h(range(grover_op.num_qubits))
+
 # Apply Grover operator the optimal number of times
 qc.compose(grover_op.power(optimal_num_iterations), inplace=True)
+
+get_matrix(qc)
+
 # Measure all qubits
 qc.measure_all()
 qc.draw(output="mpl", style="iqp")

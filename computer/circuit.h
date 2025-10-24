@@ -5,7 +5,7 @@
 #include "../matrices/matrices.h"
 
 typedef enum { IDENTITY, XGATE, ZGATE, HADAMARD, PROJ0, PROJ1 } Operator;
-typedef enum { ID, X, Z, H, MEAS, CNOT, CZ, ORACLE, S0 } GateType;
+typedef enum { ID, X, Z, H, MEAS, CNOT, ORACLE, S0 } GateType;
 
 typedef struct qcircuit QuantumCircuit;
 

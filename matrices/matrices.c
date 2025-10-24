@@ -72,7 +72,8 @@ int matrix_nb_column(Matrix *mat) {
 void matrix_print(Matrix *mat) {
     for (int i = 0; i < mat->rows; i++) {
         for (int j = 0; j < mat->cols; j++) {
-            printf("(%.2f + i%.2f) ", creal(mat->data[i][j]), cimag(mat->data[i][j]));
+            //printf("(%.2f + i%.2f) ", creal(mat->data[i][j]), cimag(mat->data[i][j]));
+            printf("%.2f ", creal(mat->data[i][j]));
         }
         printf("\n");
     }

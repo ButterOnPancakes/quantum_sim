@@ -9,17 +9,31 @@
 #include <math.h>
 #include <time.h>
 
-bool f(int *t, int n) {
-    return t[0] == 1 && t[1] == 1 && t[2] == 1;
+int marked[2][3] = {{1, 0, 1}, {0, 0, 1}};
+const int n = 3;
+const int nb_marked = 2;
+
+bool is_marked(int *t, int len) {
+    bool res = false;
+    for(int i = 0; i < nb_marked; i++) {
+        res = true;
+        for(int j = 0; j < n; j++) {
+            if(t[j] != marked[i][j]) {
+                res = false;
+                break;
+            }
+        }
+        if(res) return true;
+    }
+    return false;
 }
 
 int main() {
-    int n = 3;
     int N = fast_exp_i(2, n);
     Matrix *statevector = matrix_zero(N, 1);
     matrix_set(statevector, 0, 0, 1.0);
 
-    int l = floor(sqrt(N) * M_PI / 4.);
+    int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));
 
     QuantumCircuit *qc = create_circuit(n);
 
@@ -28,7 +42,7 @@ int main() {
     }
 
     for(int i = 0; i < l; i++) {
-        add_multiple_qbit_gate(qc, 0, n, ORACLE, &f);
+        add_multiple_qbit_gate(qc, 0, n, ORACLE, &is_marked);
         for(int k = 0; k < n; k++) {
             add_single_qbit_gate(qc, k, H);
         }
@@ -47,10 +61,6 @@ int main() {
     int *bits = circuit_execute(qc, &statevector);
     print_list(bits, n);
     free(bits);
-
-    matrix_print(statevector);
-
-    printf("%lf\n", matrix_norm(statevector));
 
     destroy_circuit(qc);
     free(qc);

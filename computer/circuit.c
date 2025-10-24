@@ -11,7 +11,7 @@
 #include "../utils/lists/list.h"
 #include "../utils/utils.h"
 
-bool collapse = false;
+bool collapse = true;
 
 typedef struct {
     double complex matrix[2][2];
@@ -165,6 +165,13 @@ GateMatrix get_gate_matrix(Operator gt) {
     return gm;
 }
 
+void convert_to_binary(int n, int *t, int len) {
+    for(int i = len-1; i >= 0; i--) {
+        t[i] = n%2;
+        n = n / 2;
+    }
+}
+
 Matrix *get_oracle_matrix(int n, bool (*f)(int *t, int k)) {
     int matrix_size = fast_exp_i(2, n);
     Matrix *oracle = matrix_identity(matrix_size);
@@ -172,12 +179,10 @@ Matrix *get_oracle_matrix(int n, bool (*f)(int *t, int k)) {
     int *input_bits = malloc(n * sizeof(int));
     // Only modify the -1 entries (much fewer operations)
     for (int state = 0; state < matrix_size; state++) {
-        for (int i = 0; i < n; i++) {
-            input_bits[i] = (state >> i) & 1;
-        }
+        convert_to_binary(state, input_bits, n);
         
         if (f(input_bits, n)) {
-            matrix_set(oracle, state, state, -1.0 + 0.0*I);
+            matrix_set(oracle, state, state, -1.0);
         }
     }
     
@@ -259,8 +264,7 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
             matrix_free(tempProj0);
 
             matrix_mult(Proj0, *statevector, &Proj0);
-            matrix_print(Proj0);
-            double proba0 = matrix_norm(Proj0);
+            double proba0 = pow(matrix_norm(Proj0), 2);
             matrix_free(Proj0);
 
             if(rand() / (double) RAND_MAX < proba0) value = 0;
@@ -273,7 +277,7 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
 
         Matrix *gateMat;
         
-        if(gate->type == CNOT || gate->type == CZ) {
+        if(gate->type == CNOT) {
             int control = gate->params[1];
             assert(control >= 0 && control < n && control != target);
 
@@ -285,7 +289,6 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
             //Measured 1
             gates_tensored[control] = PROJ1;
             if(gate->type == CNOT) gates_tensored[target] = XGATE;
-            if(gate->type == CZ) gates_tensored[target] = ZGATE;
             Matrix *gate_proj1 = get_tensored_gate_array(gates_tensored, n);
 
             matrix_add(gateMat, gate_proj1, &gateMat);
@@ -311,7 +314,7 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
         
         matrix_free(gateMat);
 
-        matrix_normalise(*statevector);
+        if(gate->type == MEAS && collapse) matrix_normalise(*statevector);
     }
 
     free(gates_tensored);
