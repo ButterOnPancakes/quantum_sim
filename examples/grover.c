@@ -1,4 +1,4 @@
-#include "circuit.h"
+#include "../computer/circuit.h"
 #include "../matrices/matrices.h"
 #include "../utils/utils.h"
 
@@ -9,9 +9,9 @@
 #include <math.h>
 #include <time.h>
 
-int marked[2][3] = {{1, 0, 1}, {0, 0, 1}};
-const int n = 3;
-const int nb_marked = 2;
+int marked[1][10] = {{0, 1, 0, 1, 0, 1, 0, 1, 0, 1}};
+const int n = 10;
+const int nb_marked = 1;
 
 bool is_marked(int *t, int len) {
     bool res = false;
@@ -56,7 +56,7 @@ int main() {
         add_single_qbit_measure(qc, i, i);
     }
 
-    print_circuit(qc);
+    //print_circuit(qc);
 
     int *bits = circuit_execute(qc, &statevector);
     print_list(bits, n);

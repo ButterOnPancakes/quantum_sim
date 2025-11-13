@@ -74,12 +74,12 @@ def grover_operator(marked_states):
     op.h(range(op.num_qubits))
     return op
 
-marked_states = ["110", "111"]
+marked_states = ["0101010101"]
 
 circuit = phase_oracle(marked_states)
 
 grover_op = grover_operator(marked_states)
-grover_op.draw(output="mpl")
+#grover_op.draw(output="mpl")
 
 optimal_num_iterations = math.floor(
     math.pi
@@ -93,11 +93,11 @@ qc.h(range(grover_op.num_qubits))
 # Apply Grover operator the optimal number of times
 qc.compose(grover_op.power(optimal_num_iterations), inplace=True)
 
-get_matrix(qc)
+#get_matrix(qc)
 
 # Measure all qubits
 qc.measure_all()
-qc.draw(output="mpl", style="iqp")
+#qc.draw(output="mpl", style="iqp")
 
 # Run on the local simulator
 simulator = AerSimulator()  # Initialize the simulator
@@ -106,7 +106,7 @@ simulator = AerSimulator()  # Initialize the simulator
 compiled_circuit = transpile(qc, simulator)
 
 # Run the transpiled circuit (e.g., for 1000 shots)
-job = simulator.run(compiled_circuit, shots=1000)
+job = simulator.run(compiled_circuit, shots=1)
 result = job.result()
 
 # Get the results
@@ -114,4 +114,4 @@ counts = result.get_counts()
 print("Measurement results:", counts)
 
 # Visualize the results
-plot_histogram(counts)
+#plot_histogram(counts)

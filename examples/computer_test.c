@@ -1,4 +1,4 @@
-#include "circuit.h"
+#include "../computer/circuit.h"
 #include "../matrices/matrices.h"
 #include "../utils/utils.h"
 

@@ -1,4 +1,4 @@
-#include "circuit.h"
+#include "../circuit.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,9 +7,9 @@
 #include <math.h>
 #include <time.h>
 
-#include "../matrices/matrices.h"
-#include "../utils/lists/list.h"
-#include "../utils/utils.h"
+#include "../../matrices/matrices.h"
+#include "../../utils/lists/list.h"
+#include "../../utils/utils.h"
 
 bool collapse = true;
 
@@ -47,7 +47,6 @@ void print_circuit(QuantumCircuit *circuit) {
     for(int i = 0; i < circuit->nb_qbits; i++) {
         printf("q%.2d: ", i);
 
-        bool has_gate = false;
         ListIterator iter = list_iterator_begin(circuit->gates);
         while (list_iterator_has_next(&iter)) {
             Gate *gate = list_iterator_next(&iter);
