@@ -1,4 +1,4 @@
-#include "../circuit.h"
+#include "base_sim.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,112 +7,17 @@
 #include <math.h>
 #include <time.h>
 
-#include "../../matrices/matrices.h"
-#include "../../utils/lists/list.h"
+#include "matrices.h"
+#include "../../utils/list.h"
 #include "../../utils/utils.h"
 
 bool collapse = true;
 
+typedef enum { IDENTITY, XGATE, ZGATE, HADAMARD, PROJ0, PROJ1 } Operator;
+
 typedef struct {
     double complex matrix[2][2];
 } GateMatrix;
-
-typedef struct qgate {
-    GateType type;
-    bool (*f)(int *t, int n);
-    int params[3]; // 0 : target qbit, 1 : control qbit or bit measured
-} Gate;
-
-typedef struct qcircuit {
-    int nb_qbits;
-    List* gates;
-} QuantumCircuit;
-
-QuantumCircuit *create_circuit(int n_qbits) {
-    QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));
-    circuit->nb_qbits = n_qbits;
-    circuit->gates = list_create();
-    return circuit;
-}
-void destroy_circuit(QuantumCircuit *circuit) {
-    ListIterator iter = list_iterator_begin(circuit->gates);
-    while (list_iterator_has_next(&iter)) {
-        Gate *gate = list_iterator_next(&iter);
-        free(gate);
-    }
-    list_destroy(circuit->gates);
-}
-
-void print_circuit(QuantumCircuit *circuit) {
-    for(int i = 0; i < circuit->nb_qbits; i++) {
-        printf("q%.2d: ", i);
-
-        ListIterator iter = list_iterator_begin(circuit->gates);
-        while (list_iterator_has_next(&iter)) {
-            Gate *gate = list_iterator_next(&iter);
-            if(gate->type == CNOT && gate->params[1] == i) {
-                printf("-|  o  |-");
-                continue;
-            }
-            if(gate->params[0] <= i && i < gate->params[0] + gate->params[1]) {
-                if(gate->type == ORACLE) {
-                    printf("-| ORA |-");
-                    continue;
-                }
-                if(gate->type == S0) {
-                    printf("-|  S  |-");
-                    continue;
-                }
-            }
-
-            if(i != gate->params[0]) {
-                printf("---------");
-                continue;
-            }
-
-            switch(gate->type) {
-                case ID: printf("-|  I  |-"); break;
-                case X: printf("-|  X  |-"); break;
-                case Z: printf("-|  Z  |-"); break;
-                case H: printf("-|  H  |-"); break;
-                case MEAS: printf("-|M(%.2d)|-", gate->params[1]); break;
-                case CNOT: printf("-|  +  |-"); break;
-                case ORACLE: printf("-| ORA |-"); break;
-                case S0: printf("-|  S  |-"); break;
-                default: printf("-|?????|-"); break;
-            }
-        }
-        printf("\n");
-    }
-}
-
-void add_single_qbit_gate(QuantumCircuit *circuit, int row, GateType g) {
-    assert(g != MEAS);
-    Gate *gate = malloc(sizeof(Gate));
-    gate->type = g;
-    gate->params[0] = row; gate->params[1] = -1;
-    list_append(circuit->gates, gate);
-}
-void add_multiple_qbit_gate(QuantumCircuit *circuit, int row, int nb_qbits, GateType g, bool (*f)(int *t, int n)) {
-    Gate *gate = malloc(sizeof(Gate));
-    gate->type = g;
-    gate->params[0] = row; gate->params[1] = nb_qbits;
-    gate->f = f;
-    list_append(circuit->gates, gate);
-}
-void add_double_qbit_gate(QuantumCircuit *circuit, int row, int control, GateType g) {
-    assert(g == CNOT);
-    Gate *gate = malloc(sizeof(Gate));
-    gate->type = g;
-    gate->params[0] = row; gate->params[1] = control;
-    list_append(circuit->gates, gate);
-}
-void add_single_qbit_measure(QuantumCircuit *circuit, int row, int output) {
-    Gate *gate = malloc(sizeof(Gate));
-    gate->type = MEAS;
-    gate->params[0] = row; gate->params[1] = output;
-    list_append(circuit->gates, gate);
-}
 
 Operator get_corresponding_operator(GateType gate, int value) {
     switch(gate) {
@@ -240,10 +145,16 @@ void reset_gate_array(Operator *gates, int n) {
     }
 }
 
-int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
+int *circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat) {
     assert(circuit != NULL);
     srand(time(NULL));
     int n = circuit->nb_qbits;
+    int size = fast_exp_i(2, n);
+
+    Matrix *statevector = matrix_zero(size, 1);
+    for(int i = 0; i < size; i++) {
+        matrix_set(statevector, i, 0, statevector_mat[i]);
+    }
 
     int *bits = calloc(n, sizeof(int));
 
@@ -262,7 +173,7 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
             Matrix *Proj0 = get_tensored_gate_matrix(tempProj0, target, n);
             matrix_free(tempProj0);
 
-            matrix_mult(Proj0, *statevector, &Proj0);
+            matrix_mult(Proj0, statevector, &Proj0);
             double proba0 = pow(matrix_norm(Proj0), 2);
             matrix_free(Proj0);
 
@@ -309,12 +220,18 @@ int *circuit_execute(QuantumCircuit *circuit, Matrix **statevector) {
             matrix_free(temp);
         }
 
-        if(gate->type != MEAS || collapse) matrix_mult(gateMat, *statevector, statevector);
+        if(gate->type != MEAS || collapse) matrix_mult(gateMat, statevector, &statevector);
         
         matrix_free(gateMat);
 
-        if(gate->type == MEAS && collapse) matrix_normalise(*statevector);
+        if(gate->type == MEAS && collapse) matrix_normalise(statevector);
     }
+
+    for(int i = 0; i < fast_exp_i(2, n); i++) {
+        statevector_mat[i] = matrix_get(statevector, i, 0);
+    }
+
+    matrix_free(statevector);
 
     free(gates_tensored);
 

@@ -1,5 +1,5 @@
-#include "../computer/circuit.h"
-#include "../matrices/matrices.h"
+#include "../builder/circuit.h"
+#include "../simulator/naive/base_sim.h"
 #include "../utils/utils.h"
 
 #include <stdio.h>
@@ -9,7 +9,7 @@
 #include <math.h>
 #include <time.h>
 
-int marked[1][10] = {{0, 1, 0, 1, 0, 1, 0, 1, 0, 1}};
+int marked[1][10] = {{1, 1, 0, 1, 0, 1, 0, 1, 0, 1}};
 const int n = 10;
 const int nb_marked = 1;
 
@@ -30,8 +30,8 @@ bool is_marked(int *t, int len) {
 
 int main() {
     int N = fast_exp_i(2, n);
-    Matrix *statevector = matrix_zero(N, 1);
-    matrix_set(statevector, 0, 0, 1.0);
+    double complex *statevector = calloc(N * 1, sizeof(double complex));
+    statevector[0] = 1 + 0 * I;
 
     int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));
 
@@ -58,12 +58,12 @@ int main() {
 
     //print_circuit(qc);
 
-    int *bits = circuit_execute(qc, &statevector);
+    int *bits = circuit_execute(qc, statevector);
     print_list(bits, n);
     free(bits);
 
+    free(statevector);
+
     destroy_circuit(qc);
     free(qc);
-
-    matrix_free(statevector);
 }
