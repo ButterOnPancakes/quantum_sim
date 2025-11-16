@@ -1,18 +1,69 @@
 #include "../builder/circuit.h"
-#include "../simulator/naive/base_sim.h"
+#include "../simulator/opti/opti_sim.h"
 #include "../utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #include <time.h>
+
+static void *aligned_alloc_64(size_t size) {
+    void *p = NULL;
+    // POSIX aligned_alloc (size must be multiple of alignment)
+    size_t align = 64;
+    size_t sz = ((size + align - 1) / align) * align;
+    p = aligned_alloc(align, sz);
+    if (!p) {
+        // fallback to posix_memalign
+        if (posix_memalign(&p, align, sz) != 0) p = NULL;
+    }
+    return p;
+}
+static double complex *state_alloc(int nqubits) {
+    uint64_t dim = 1ULL << nqubits;
+    double complex *s = aligned_alloc_64(dim * sizeof(double complex));
+    if (!s) {
+        // fallback
+        s = malloc(dim * sizeof(double complex));
+    }
+    return s;
+}
+static void init_zero_state(double complex *s, int nqubits) {
+    uint64_t dim = 1ULL << nqubits;
+    for (uint64_t i = 0; i < dim; ++i) s[i] = 0.0 + 0.0*I;
+    s[0] = 1.0 + 0.0*I;
+}
+
+void test_simple_gates(int n) {
+    QuantumCircuit *qc = create_circuit(n);
+
+    double complex *statevector = state_alloc(n);
+    init_zero_state(statevector, n);
+
+    for(int i = 0; i < n; i++) {
+        add_single_qbit_gate(qc, i, H);
+        //add_single_qbit_gate(qc, i, Z);
+        //add_single_qbit_gate(qc, i, X);
+    }
+
+    int *bits = circuit_execute_opti(qc, statevector);
+    print_list(bits, n);
+
+    destroy_circuit(qc);
+    free(bits);
+    free(qc);
+
+    free(statevector);
+}
 
 void test_bell_state(int n) {
     printf("----------------------- Bell State Circuit -----------------------\n\n");
 
-    double complex* statevector = calloc((1ULL << n) * 1, sizeof(double complex));
+    double complex* statevector = calloc((1ULL << n), sizeof(double complex));
     statevector[0] = 1 + 0 * I;
 
     QuantumCircuit *qc = create_circuit(n);
@@ -24,7 +75,7 @@ void test_bell_state(int n) {
 
     print_circuit(qc);
 
-    int *bits = circuit_execute(qc, statevector);
+    int *bits = circuit_execute_opti(qc, statevector);
     print_list(bits, n);
 
     destroy_circuit(qc);
@@ -76,7 +127,7 @@ void test_teleportation() {
     print_circuit(qc);
     
     // Only takes the first 2 in account
-    int *alice_bits = circuit_execute(qc, statevector);
+    int *alice_bits = circuit_execute_opti(qc, statevector);
     print_list(alice_bits, 2);
     
     destroy_circuit(qc);
@@ -101,7 +152,7 @@ void test_teleportation() {
     print_circuit(bob_qc);
 
     // Takes the third (teleported qbit) in account
-    int *bob_bits = circuit_execute(bob_qc, statevector);
+    int *bob_bits = circuit_execute_opti(bob_qc, statevector);
 
     destroy_circuit(bob_qc);
     free(bob_qc);
@@ -114,8 +165,9 @@ void test_teleportation() {
 }
 
 int main() {
-    test_bell_state(2);
-    test_teleportation();
+    test_simple_gates(30);
+    //test_bell_state(2);
+    //test_teleportation();
 
     return 0;
 }

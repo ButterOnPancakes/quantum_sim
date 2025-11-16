@@ -8,13 +8,13 @@
 
 typedef enum { ID, X, Z, H, MEAS, CNOT, ORACLE, S0 } GateType;
 
-typedef struct qgate {
+typedef struct {
     GateType type;
     bool (*f)(int *t, int n); // Oracle function
     int params[3]; // 0 : target qbit, 1 : control qbit or bit measured
 } Gate;
 
-typedef struct qcircuit {
+typedef struct {
     int nb_qbits;
     List* gates;
 } QuantumCircuit;

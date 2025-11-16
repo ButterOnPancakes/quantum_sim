@@ -5,6 +5,6 @@
 
 #include <complex.h>
 
-int *circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat);
+int *circuit_execute_opti(QuantumCircuit *circuit, double complex *statevector_mat);
 
 #endif

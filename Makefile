@@ -1,25 +1,31 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -g -Wall -fsanitize=address -fopenmp
+# -g -Wall -fsanitize=address 
+CFLAGS = -fopenmp -march=native
 LDFLAGS = -lm
 
 # Directories
 BIN_DIR = bin
+EXCLUDED_DIRS = .venv .vscode benchmarks bin examples
 BUILDER_DIR = $(BIN_DIR)/builder
 EXAMPLES_DIR = $(BIN_DIR)/examples
 SIMULATOR_DIR = $(BIN_DIR)/simulator
 UTILS_DIR = $(BIN_DIR)/utils
 LISTS_DIR = $(UTILS_DIR)/lists
 
-# Common object files
-COMMON_OBJS = $(BUILDER_DIR)/circuit.o \
-	$(SIMULATOR_DIR)/naive/matrices.o \
-	$(SIMULATOR_DIR)/naive/base_sim.o \
-	$(LISTS_DIR)/list.o \
-	$(UTILS_DIR)/utils.o \
+# Find all source files recursively, excluding specified directories
+SOURCES = $(shell find . -name "*.c" $(foreach dir,$(EXCLUDED_DIRS),-not -path "./$(dir)/*") $(foreach dir,$(EXCLUDED_DIRS),-not -path "./$(dir)"))
+OBJECTS = $(SOURCES:%.c=$(BIN_DIR)/%.o)
+
+# Find all executable source files in examples (those with main function)
+EXEC_SOURCES = $(shell find examples -name "*.c")
+EXEC_TARGETS = $(EXEC_SOURCES:examples/%.c=$(EXAMPLES_DIR)/%)
+
+# Common object files (non-executable objects)
+COMMON_OBJS = $(filter-out $(EXEC_SOURCES:%.c=$(BIN_DIR)/%.o), $(OBJECTS))
 
 # Targets
-TARGETS = $(EXAMPLES_DIR)/computer_test $(EXAMPLES_DIR)/grover
+TARGETS = $(EXEC_TARGETS)
 
 # Default target
 all: $(TARGETS)
@@ -30,30 +36,42 @@ $(BIN_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Pattern rule for executables
-$(BUILDER_DIR)/%: $(BUILDER_DIR)/%.o $(COMMON_OBJS)
-	@mkdir -p $(BUILDER_DIR)
+$(EXAMPLES_DIR)/%: $(BIN_DIR)/examples/%.o $(COMMON_OBJS)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Pattern rule for executables
-$(SIMULATOR_DIR)/%: $(SIMULATOR_DIR)/%.o $(COMMON_OBJS)
-	@mkdir -p $(SIMULATOR_DIR)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-# Pattern rule for executables
-$(EXAMPLES_DIR)/%: $(EXAMPLES_DIR)/%.o $(COMMON_OBJS)
-	@mkdir -p $(EXAMPLES_DIR)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-# Test targets
+# Individual example targets (for convenience)
 test_computer: $(EXAMPLES_DIR)/computer_test
 	./$<
 
-grover: $(EXAMPLES_DIR)/grover
+test_grover: $(EXAMPLES_DIR)/grover
 	./$<
+
+# Build all examples without running
+build_examples: $(TARGETS)
 
 # Clean
 clean:
 	rm -rf $(BIN_DIR)/*
 
 # Phony targets
-.PHONY: all test_computer grover clean
+.PHONY: all build_examples computer_test grover clean
+
+# Debug targets (useful for debugging the makefile)
+print-sources:
+	@echo "SOURCES: $(SOURCES)"
+
+print-objects:
+	@echo "OBJECTS: $(OBJECTS)"
+
+print-exec-sources:
+	@echo "EXEC_SOURCES: $(EXEC_SOURCES)"
+
+print-exec-targets:
+	@echo "EXEC_TARGETS: $(EXEC_TARGETS)"
+
+print-common-objs:
+	@echo "COMMON_OBJS: $(COMMON_OBJS)"
+
+print-excluded:
+	@echo "EXCLUDED_DIRS: $(EXCLUDED_DIRS)"
