@@ -33,6 +33,7 @@ typedef struct {
             int nb_qbits;
             int *qbits;
             double complex *mat;
+            char *label;
         } custom;
     } gate;
 } Gate;
@@ -70,7 +71,7 @@ void print_circuit(QuantumCircuit *circuit);
 void add_unitary_gate(QuantumCircuit *circuit, int t, SingleBitGate tg);
 void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg);
 // Mat size must be 2^nb_qbits !
-void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat);
+void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label);
 
 void add_measure(QuantumCircuit *circuit, int qbit, int cbit);
 #endif

@@ -11,7 +11,7 @@
 
 /* Integers on 8 bits bc why not (Max 256)*/
 const int n = 8;
-unsigned int marked[3] = {13, 26, 210};
+unsigned int marked[] = {23, 48, 204};
 const int nb_marked = 3;
 
 int targets[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -56,11 +56,11 @@ int main() {
     }
 
     for(int i = 0; i < l; i++) {
-        add_custom_gate(qc, n, targets, ORACLE_MAT); // Oracle
+        add_custom_gate(qc, n, targets, ORACLE_MAT, " ORA "); // Oracle
         for(int k = 0; k < n; k++) {
             add_unitary_gate(qc, k, GATE_H);
         }
-        add_custom_gate(qc, n, targets, S0_MAT);
+        add_custom_gate(qc, n, targets, S0_MAT, "  S0 "); // Diffusion Operator
         for(int k = 0; k < n; k++) {
             add_unitary_gate(qc, k, GATE_H);
         }

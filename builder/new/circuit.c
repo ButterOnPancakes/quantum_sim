@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "../../utils/list.h"
 #include "../../utils/utils.h"
@@ -30,8 +31,15 @@ void print_cregister(ClassicalRegister *c) {
     printf("[");
     for(int i = 0; i < c->nb_bits; i++) {
         if (i < c->nb_bits - 1) printf("%d, ", c->bits[i]);
-        else printf("%d]\n", c->bits[i]);
+        else printf("%d] ", c->bits[i]);
     }
+
+    long int val = 0;
+    for(int i = 0; i < c->nb_bits; i++) {
+        val <<= 1;
+        val += c->bits[i];
+    }
+    printf("= %ld\n", val);
 }
 void free_cregister(ClassicalRegister *cregister) {
     free(cregister->bits);
@@ -117,8 +125,15 @@ void print_circuit(QuantumCircuit *circuit) {
                     else printf("---------");
                     continue;
                 case CUSTOM: 
-                    if(gate->gate.custom.qbits[0] == i) printf("-| CUS |-");
-                    else printf("---------");
+                    bool found = false;
+                    for(int j = 0; j < gate->gate.custom.nb_qbits; j++) {
+                        if(gate->gate.custom.qbits[j] == i) {
+                            printf("-|%-5.5s|-", gate->gate.custom.label);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found) printf("---------");
                     continue;
                 case UNITARY: 
                     if(gate->gate.unitary.qbit == i) printf(get_symbol(gate->gate.unitary.type));
@@ -151,12 +166,13 @@ void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg) {
     list_append(circuit->gates, gate);
 }
 // Mat size must be 2^nb_qbits !
-void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat) {
+void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label) {
     Gate *gate = malloc(sizeof(Gate));
     gate->class = CUSTOM;
     gate->gate.custom.nb_qbits = nb_qbits;
     gate->gate.custom.qbits = t;
     gate->gate.custom.mat = mat;
+    gate->gate.custom.label = label;
     list_append(circuit->gates, gate);
 }
 void add_measure(QuantumCircuit *circuit, int qbit, int cbit) {

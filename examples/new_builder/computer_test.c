@@ -18,7 +18,7 @@ int main() {
         0, 1, 0, 0,
         0, 0, 0, 1,
         0, 0, 1, 0
-    });
+    }, "SWAP");
     add_measure(qc, 0, 0);
     add_measure(qc, 1, 1);
     add_measure(qc, 2, 2);

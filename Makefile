@@ -34,12 +34,6 @@ test_computer: $(BIN_DIR)/$(EXAMPLES_DIR)/computer_test
 test_grover: $(BIN_DIR)/$(EXAMPLES_DIR)/grover
 	./$<
 
-test_builder: $(BIN_DIR)/$(EXAMPLES_DIR)/builder_test
-	./$<
-
-test_custom: $(BIN_DIR)/$(EXAMPLES_DIR)/custom_test
-	./$<
-
 # Clean
 clean:
 	rm -rf $(BIN_DIR)/*
