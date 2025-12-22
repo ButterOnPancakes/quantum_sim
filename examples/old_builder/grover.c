@@ -1,6 +1,6 @@
-#include "../builder/circuit.h"
-#include "../simulator/naive/base_sim.h"
-#include "../utils/utils.h"
+#include "../../builder/old/circuit_old.h"
+#include "../../simulator/naive/base_sim.h"
+#include "../../utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,8 @@ bool is_marked(int *t, int len) {
 }
 
 int main() {
-    int N = fast_exp_i(2, n);
+    srand(time(NULL));
+    int N = 1 << n;
     double complex *statevector = calloc(N * 1, sizeof(double complex));
     statevector[0] = 1 + 0 * I;
 

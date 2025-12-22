@@ -52,3 +52,25 @@ void print_list(int *bits, int n) {
         else printf("%d]\n", bits[i]);
     }
 }
+
+void print_state(double complex *state, int n) {
+    printf("[");
+    for(int i = 0; i < n; i++) {
+        if (i < n - 1) printf("%.2f + i%.2f, ", creal(state[i]), cimag(state[i]));
+        else printf("%.2f + i%.2f]\n", creal(state[i]), cimag(state[i]));
+    }
+}
+
+void *aligned_alloc_64(size_t size) {
+    void *p = NULL;
+    // POSIX aligned_alloc (size must be multiple of alignment)
+    size_t align = 64;
+    size_t sz = ((size + align - 1) / align) * align;
+    p = aligned_alloc(align, sz);
+    if (!p) {
+        // fallback to posix_memalign
+        if (posix_memalign(&p, align, sz) != 0) p = NULL;
+    }
+    return p;
+}
+

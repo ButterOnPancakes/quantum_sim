@@ -1,7 +1,7 @@
 #ifndef BASE_SIM_H
 #define BASE_SIM_H
 
-#include "../../builder/circuit.h"
+#include "../../builder/old/circuit_old.h"
 
 #include <complex.h>
 

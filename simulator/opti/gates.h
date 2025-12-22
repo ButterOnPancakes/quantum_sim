@@ -1,11 +1,16 @@
 #ifndef GATES_H
 #define GATES_H
 
+#include "../../builder/new/circuit.h"
+
 #include <complex.h>
+
+void apply_corresponding_gate(double complex g[4], SingleBitGate gt);
 
 /* -------- common gates (2x2) -------- */
 void gate_h(double complex g[4]);
 void gate_x(double complex g[4]);
+void gate_y(double complex g[4]);
 void gate_z(double complex g[4]);
 
 /* -------- single-qubit gate (in-place) --------
@@ -28,6 +33,14 @@ void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1,
    When control bit = 1, apply U to target; leave amplitudes unchanged when control=0.
 */
 void apply_controlled_u_inplace(double complex *state, int nqubits, int c, int t, double complex U[4]);
+
+/* -------- custom multi-qubit gate (in-place) --------
+   Gate U : 2^k x 2^k row-major matrix
+   targets: array of k target qubit indices
+   k: number of target qubits
+   Applies U to the specified target qubits.
+*/
+void apply_custom_inplace(double complex *state, int nqbits, int *targets, int k, double complex *U);
 
 /* -------- measurement (single qubit) --------
    Collapses state and returns measurement result (0/1).

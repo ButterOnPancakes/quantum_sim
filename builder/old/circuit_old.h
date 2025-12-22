@@ -1,7 +1,7 @@
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
-#include "../utils/list.h"
+#include "../../utils/list.h"
 
 #include <stdbool.h>
 #include <complex.h>
@@ -18,6 +18,9 @@ typedef struct {
     int nb_qbits;
     List* gates;
 } QuantumCircuit;
+
+double complex* init_zero_state(int nqubits);
+double complex* fuse_qbits(double complex *q1, int n1, double complex *q2, int n2);
 
 QuantumCircuit *create_circuit(int n_qbits);
 void destroy_circuit(QuantumCircuit *circuit);

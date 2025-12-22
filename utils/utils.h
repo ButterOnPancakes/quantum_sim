@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <complex.h>
+#include <stddef.h>
+
 #define M_PI       3.14159265358979323846
 
 double now_seconds();
@@ -10,5 +13,8 @@ int fast_exp_i(int x, int n);
 double fast_exp_d(double x, int n);
 
 void print_list(int *bits, int n);
+void print_state(double complex *state, int n);
+
+void *aligned_alloc_64(size_t size);
 
 #endif

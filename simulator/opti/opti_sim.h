@@ -1,10 +1,10 @@
 #ifndef OPTI_SIM_H
 #define OPTI_SIM_H
 
-#include "../../builder/circuit.h"
+#include "../../builder/new/circuit.h"
 
 #include <complex.h>
 
-int *circuit_execute_opti(QuantumCircuit *circuit, double complex *statevector_mat);
+void circuit_execute(QuantumCircuit *circuit);
 
 #endif

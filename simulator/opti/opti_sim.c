@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
+#include <stdint.h>
 
 #include <omp.h>
 
@@ -14,38 +15,52 @@
 #include "../../utils/list.h"
 #include "../../utils/utils.h"
 
-int *circuit_execute_opti(QuantumCircuit *circuit, double complex *state) {
-    assert(circuit != NULL);
-    srand(time(NULL));
-
-    int *bits = calloc(circuit->nb_qbits, sizeof(int));
-
-    int nthreads = omp_get_max_threads();
-    omp_set_num_threads(nthreads);
-    printf("OpenMP enabled: threads=%d\n", nthreads);
-
+void circuit_execute(QuantumCircuit *circuit) {
     double t0 = now_seconds();
+    
+    double complex gm[4] = {1, 0, 0, 1};
     
     ListIterator iter = list_iterator_begin(circuit->gates);
     while (list_iterator_has_next(&iter)) {
         Gate *gate = list_iterator_next(&iter);
-        GateType gt = gate->type;
-        int qbit = gate->params[0];
-
-        double complex gm[4] = {1, 0, 1, 0};
-        switch (gt) {
-            case H: gate_h(gm);
-            case Z: gate_z(gm);
-            case X: gate_x(gm);
-            
-            default:
-                apply_single_qubit_inplace(state, circuit->nb_qbits, qbit, gm);
+        switch (gate->class) {
+            case UNITARY: 
+                apply_corresponding_gate(gm, gate->gate.unitary.type);
+                apply_single_qubit_inplace(
+                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    gate->gate.unitary.qbit, 
+                    gm
+                );
                 break;
+            
+            case CONTROL:
+                apply_corresponding_gate(gm, gate->gate.control.type);
+                apply_controlled_u_inplace(
+                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    gate->gate.control.control, gate->gate.control.qbit, 
+                    gm
+                ); 
+                break;
+            
+            case MEAS:
+                circuit->cregister->bits[gate->gate.measure.cbit] = measure_qubit_inplace(
+                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    gate->gate.measure.qbit
+                );
+                break;
+            
+            case CUSTOM:
+                apply_custom_inplace(
+                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    gate->gate.custom.qbits, gate->gate.custom.nb_qbits, 
+                    gate->gate.custom.mat
+                );
+                break;
+
+            default: break;
         }
     }
 
     double t1 = now_seconds();
     printf("Execution Time : %.6f s\n", t1 - t0);
-
-    return bits;
 }

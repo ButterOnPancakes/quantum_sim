@@ -77,7 +77,7 @@ void convert_to_binary(int n, int *t, int len) {
 }
 
 Matrix *get_oracle_matrix(int n, bool (*f)(int *t, int k)) {
-    int matrix_size = fast_exp_i(2, n);
+    int matrix_size = 1 << n;
     Matrix *oracle = matrix_identity(matrix_size);
     
     int *input_bits = malloc(n * sizeof(int));
@@ -94,7 +94,7 @@ Matrix *get_oracle_matrix(int n, bool (*f)(int *t, int k)) {
     return oracle;
 }
 Matrix *get_S0_matrix(int n) {
-    int size = fast_exp_i(2, n);
+    int size = 1 << n;
     Matrix *S0 = matrix_zero(size, size);
     
     // Start with -I (negative identity)
@@ -115,14 +115,14 @@ Matrix *get_tensored_gate_matrix(Matrix *mat, int i, int n) {
     int end = i + k;
 
     if(i > 0) {
-        gateMat = matrix_identity(fast_exp_i(2, i));
+        gateMat = matrix_identity(1 << i);
         matrix_tensor_product(gateMat, mat, &gateMat);
     }
     else gateMat = matrix_duplicate(mat);
 
 
     if(end < n) {
-        Matrix *complete_identity = matrix_identity(fast_exp_i(2, n - end));
+        Matrix *complete_identity = matrix_identity(1 << (n - end));
 
         matrix_tensor_product(gateMat, complete_identity, &gateMat);
         matrix_free(complete_identity);
@@ -146,10 +146,10 @@ void reset_gate_array(Operator *gates, int n) {
 }
 
 int *circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat) {
-    assert(circuit != NULL);
-    srand(time(NULL));
+    double t0 = now_seconds();
+
     int n = circuit->nb_qbits;
-    int size = fast_exp_i(2, n);
+    int size = 1 << n;
 
     Matrix *statevector = matrix_zero(size, 1);
     for(int i = 0; i < size; i++) {
@@ -180,7 +180,7 @@ int *circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat) {
             if(rand() / (double) RAND_MAX < proba0) value = 0;
             else value = 1;
 
-            printf("Measured %d on qbit %d with probability %.2f\n", value, target, fabs((double)value - proba0));
+            //printf("Measured %d on qbit %d with probability %.2f\n", value, target, fabs((double)value - proba0));
 
             bits[gate->params[1]] = value;
         }
@@ -227,13 +227,16 @@ int *circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat) {
         if(gate->type == MEAS && collapse) matrix_normalise(statevector);
     }
 
-    for(int i = 0; i < fast_exp_i(2, n); i++) {
+    for(int i = 0; i < 1 << n; i++) {
         statevector_mat[i] = matrix_get(statevector, i, 0);
     }
 
     matrix_free(statevector);
 
     free(gates_tensored);
+    
+    double t1 = now_seconds();
+    printf("Execution Time : %.6f s\n", t1 - t0);
 
     return bits;
 }
