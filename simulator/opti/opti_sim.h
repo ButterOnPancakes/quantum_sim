@@ -5,6 +5,6 @@
 
 #include <complex.h>
 
-void circuit_execute(QuantumCircuit *circuit);
+double circuit_execute(QuantumCircuit *circuit);
 
 #endif

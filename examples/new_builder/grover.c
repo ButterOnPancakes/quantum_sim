@@ -1,6 +1,7 @@
 #include "../../builder/new/circuit.h"
 #include "../../simulator/opti/opti_sim.h"
 #include "../../utils/utils.h"
+#include "../../utils/gnuplot.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,19 +9,22 @@
 #include <assert.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
+
+#include <omp.h>
 
 /* Integers on 8 bits bc why not (Max 256)*/
-const int n = 8;
-unsigned int marked[] = {23, 48, 204};
-const int nb_marked = 3;
+const int n = 12;
+unsigned int marked[] = {2, 3};
+const int nb_marked = 2;
 
-int targets[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+int targets[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
 /* Size 256 x 256 in a single line so 65536 */
 double complex *ORACLE_MAT;
 double complex *S0_MAT;
 
-void init_matrices() {
+void init_matrices(int n) {
     unsigned long size = 1 << n;
 
     /* Init S0 = 2|0><0| - In */
@@ -41,9 +45,9 @@ void init_matrices() {
     }
 }
 
-int main() {
+double run_grover(int n) {
     srand(time(NULL));
-    init_matrices();
+    init_matrices(n);
     int N = 1 << n;
     int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));
 
@@ -70,11 +74,45 @@ int main() {
         add_measure(qc, i, i);
     }
 
-    circuit_execute(qc);
+    double time = circuit_execute(qc);
 
-    print_cregister(qc->cregister);
+    //print_cregister(qc->cregister);
 
     destroy_circuit(qc);
     free_cregister(cregister);
     free_qregister(qregister);
+
+    free(ORACLE_MAT);
+    free(S0_MAT);
+
+    return time;
+}
+
+int main() {
+    srand(time(NULL));
+
+    int Nmin = 2;
+    int Nmax = 11;
+    int amount = 100;
+
+    int threads = omp_get_max_threads();
+    printf("Using %d threads\n", threads);
+    omp_set_num_threads(threads);
+
+    double x[Nmax - Nmin];
+    double y[Nmax - Nmin];
+    for (int i = Nmin; i < Nmax; i++) {
+        x[i - Nmin] = i;
+        y[i - Nmin] = 0.0;
+        for (int j = 0; j < amount; j++) {
+            y[i - Nmin] += run_grover(i);
+        }
+        y[i - Nmin] /= amount;
+        printf("n=%d time=%f\n", i, y[i - Nmin]);
+    }
+
+    graph g = init_graph("Grover Execution Time", "Number of Qubits", "Time (s)");
+    histogram(g, x, y, Nmax - Nmin, "");
+    close_graph(g);
+    return 0;
 }

@@ -15,7 +15,7 @@
 #include "../../utils/list.h"
 #include "../../utils/utils.h"
 
-void circuit_execute(QuantumCircuit *circuit) {
+double circuit_execute(QuantumCircuit *circuit) {
     double t0 = now_seconds();
     
     double complex gm[4] = {1, 0, 0, 1};
@@ -62,5 +62,6 @@ void circuit_execute(QuantumCircuit *circuit) {
     }
 
     double t1 = now_seconds();
-    printf("Execution Time : %.6f s\n", t1 - t0);
+    //printf("Execution Time : %.6f s\n", t1 - t0);
+    return t1 - t0;
 }

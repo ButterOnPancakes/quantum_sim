@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -fopenmp -march=native -g -fsanitize=address
+CFLAGS = -Wall -fopenmp -march=native #-g -fsanitize=address
 LDFLAGS = -lm
 
 # Directories
