@@ -74,10 +74,7 @@ double run_grover(int n) {
         add_measure(qc, i, i);
     }
 
-    double time = circuit_execute(qc);
-
-    //print_cregister(qc->cregister);
-
+    double time = circuit_execute(qc, true);
     destroy_circuit(qc);
     free_cregister(cregister);
     free_qregister(qregister);
@@ -91,9 +88,9 @@ double run_grover(int n) {
 int main() {
     srand(time(NULL));
 
-    int Nmin = 2;
-    int Nmax = 11;
-    int amount = 100;
+    int Nmin = 2; /* inclusive */
+    int Nmax = 13; /* exclusive */
+    int amount = 1;
 
     int threads = omp_get_max_threads();
     printf("Using %d threads\n", threads);

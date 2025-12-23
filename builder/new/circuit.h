@@ -4,6 +4,7 @@
 #include "../../utils/list.h"
 
 #include <complex.h>
+#include <stdio.h>
 
 typedef enum {
     GATE_I,
@@ -55,18 +56,18 @@ typedef struct {
 } QuantumCircuit;
 
 ClassicalRegister *create_cregister(int nbits);
-void print_cregister(ClassicalRegister *cregister);
+void print_cregister(FILE *channel, ClassicalRegister *cregister);
 void free_cregister(ClassicalRegister *cregister);
 
 QuantumRegister *create_qregister(int nqubits);
 QuantumRegister *fuse_qregister(QuantumRegister *q1, QuantumRegister *q2);
-void print_qregister(QuantumRegister *qregister);
+void print_qregister(FILE *channel, QuantumRegister *qregister);
 void free_qregister(QuantumRegister *qregister);
 
 QuantumCircuit *create_circuit(QuantumRegister *qregister, ClassicalRegister *cregister);
 void destroy_circuit(QuantumCircuit *circuit);
 
-void print_circuit(QuantumCircuit *circuit);
+void print_circuit(FILE *channel, QuantumCircuit *circuit);
 
 void add_unitary_gate(QuantumCircuit *circuit, int t, SingleBitGate tg);
 void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg);

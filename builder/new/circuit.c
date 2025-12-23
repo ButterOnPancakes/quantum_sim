@@ -27,11 +27,11 @@ ClassicalRegister *create_cregister(int nbits) {
     cregister->bits = calloc(cregister->nb_bits, sizeof(int));
     return cregister;
 }
-void print_cregister(ClassicalRegister *c) {
-    printf("[");
+void print_cregister(FILE *channel, ClassicalRegister *c) {
+    fprintf(channel, "[");
     for(int i = 0; i < c->nb_bits; i++) {
-        if (i < c->nb_bits - 1) printf("%d, ", c->bits[i]);
-        else printf("%d] ", c->bits[i]);
+        if (i < c->nb_bits - 1) fprintf(channel, "%d, ", c->bits[i]);
+        else fprintf(channel, "%d] ", c->bits[i]);
     }
 
     long int val = 0;
@@ -39,7 +39,7 @@ void print_cregister(ClassicalRegister *c) {
         val <<= 1;
         val += c->bits[i];
     }
-    printf("= %ld\n", val);
+    fprintf(channel, "= %ld\n", val);
 }
 void free_cregister(ClassicalRegister *cregister) {
     free(cregister->bits);
@@ -71,11 +71,11 @@ QuantumRegister *fuse_qregister(QuantumRegister *q1, QuantumRegister *q2) {
 
     return qregister;
 }
-void print_qregister(QuantumRegister *q) {
-    printf("[");
+void print_qregister(FILE *channel, QuantumRegister *q) {
+    fprintf(channel, "[");
     for(int i = 0; i < q->nb_qbits; i++) {
-        if (i < q->nb_qbits - 1) printf("%.2f + i%.2f, ", creal(q->statevector[i]), cimag(q->statevector[i]));
-        else printf("%.2f + i%.2f]\n", creal(q->statevector[i]), cimag(q->statevector[i]));
+        if (i < q->nb_qbits - 1) fprintf(channel, "%.2f + i%.2f, ", creal(q->statevector[i]), cimag(q->statevector[i]));
+        else fprintf(channel, "%.2f + i%.2f]\n", creal(q->statevector[i]), cimag(q->statevector[i]));
     }
 }
 void free_qregister(QuantumRegister *qregister) {
@@ -111,9 +111,9 @@ char *get_symbol(SingleBitGate gt) {
     return "-|?????|-";
 }
 
-void print_circuit(QuantumCircuit *circuit) {
+void print_circuit(FILE *channel, QuantumCircuit *circuit) {
     for(int i = 0; i < circuit->qregister->nb_qbits; i++) {
-        printf("q%.2d: ", i);
+        fprintf(channel, "q%.2d: ", i);
 
         ListIterator iter = list_iterator_begin(circuit->gates);
         while (list_iterator_has_next(&iter)) {
@@ -121,32 +121,32 @@ void print_circuit(QuantumCircuit *circuit) {
 
             switch(gate->class) {
                 case MEAS:
-                    if(gate->gate.measure.qbit == i) printf("-|M(%.2d)|-", gate->gate.measure.cbit);
-                    else printf("---------");
+                    if(gate->gate.measure.qbit == i) fprintf(channel, "-|M(%.2d)|-", gate->gate.measure.cbit);
+                    else fprintf(channel, "---------");
                     continue;
                 case CUSTOM: 
                     bool found = false;
                     for(int j = 0; j < gate->gate.custom.nb_qbits; j++) {
                         if(gate->gate.custom.qbits[j] == i) {
-                            printf("-|%-5.5s|-", gate->gate.custom.label);
+                            fprintf(channel, "-|%-5.5s|-", gate->gate.custom.label);
                             found = true;
                             break;
                         }
                     }
-                    if(!found) printf("---------");
+                    if(!found) fprintf(channel, "---------");
                     continue;
                 case UNITARY: 
-                    if(gate->gate.unitary.qbit == i) printf(get_symbol(gate->gate.unitary.type));
-                    else printf("---------");
+                    if(gate->gate.unitary.qbit == i) fprintf(channel, get_symbol(gate->gate.unitary.type));
+                    else fprintf(channel, "---------");
                     continue;
                 case CONTROL: 
-                    if(gate->gate.control.qbit == i) printf(get_symbol(gate->gate.control.type));
-                    else if(gate->gate.control.control == i) printf("-|  *  |-");
-                    else printf("---------");
+                    if(gate->gate.control.qbit == i) fprintf(channel, get_symbol(gate->gate.control.type));
+                    else if(gate->gate.control.control == i) fprintf(channel, "-|  *  |-");
+                    else fprintf(channel, "---------");
                     continue;
             }
         }
-        printf("\n");
+        fprintf(channel, "\n");
     }
 }
 
