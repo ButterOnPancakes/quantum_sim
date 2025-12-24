@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Logger *create_logger() {
+Logger *logger_create() {
     Logger *logger = (Logger *)malloc(sizeof(Logger));
     if (logger == NULL) {
         perror("Failed to initialize logger");
@@ -16,7 +16,7 @@ Logger *create_logger() {
     logger->start_time = now_seconds();
     return logger;
 }
-void close_logger(Logger *logger) {
+void logger_free(Logger *logger) {
     if (logger != NULL && logger->is_file_open && logger->log_file != NULL) {
         fclose(logger->log_file);
     }
@@ -34,7 +34,7 @@ FILE *create_log_file(const char* filename) {
     }
     return file;
 }
-void set_channel(Logger *logger, FILE *channel, bool is_file) {
+void logger_set_channel(Logger *logger, FILE *channel, bool is_file) {
     if (logger == NULL) return;
     if (logger->is_file_open && logger->log_file != NULL) {
         fclose(logger->log_file);
@@ -43,7 +43,7 @@ void set_channel(Logger *logger, FILE *channel, bool is_file) {
     logger->is_file_open = is_file;
 }
 
-void logMessage(Logger *logger, const char* tag, const char* message) {
+void logger_message(Logger *logger, const char* tag, const char* message) {
     if (logger == NULL || message == NULL) return;
     double current_time = now_seconds() - logger->start_time;
     if (logger->log_file != NULL) {

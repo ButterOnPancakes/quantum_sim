@@ -22,10 +22,10 @@ typedef struct {
 double complex* init_zero_state(int nqubits);
 double complex* fuse_qbits(double complex *q1, int n1, double complex *q2, int n2);
 
-QuantumCircuit *create_circuit(int n_qbits);
-void destroy_circuit(QuantumCircuit *circuit);
+QuantumCircuit *circuit_create(int n_qbits);
+void circuit_free(QuantumCircuit *circuit);
 
-void print_circuit(QuantumCircuit *circuit);
+void circuit_print(QuantumCircuit *circuit);
 
 void add_single_qbit_gate(QuantumCircuit *circuit, int row, GateType g);
 void add_double_qbit_gate(QuantumCircuit *circuit, int row, int control, GateType g);

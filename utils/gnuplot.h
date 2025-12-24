@@ -5,10 +5,10 @@
 
 typedef FILE* graph;
 
-graph init_graph(const char *title, const char *xlabel, const char *ylabel);
-void close_graph(graph g);
+graph graph_create(const char *title, const char *xlabel, const char *ylabel);
+void graph_free(graph g);
 
-void plot(graph g, double *x, double *y, int n, const char *title);
-void histogram(graph g, double *x, double *y, int n, const char *title);
+void graph_plot(graph g, double *x, double *y, int n, const char *title);
+void graph_histogram(graph g, double *x, double *y, int n, const char *title);
 
 #endif

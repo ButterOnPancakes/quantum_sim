@@ -29,7 +29,7 @@ int main() {
     add_measure(qc, 1, 1);
     add_measure(qc, 2, 2);
 
-    circuit_execute(qc, true);
+    //circuit_execute(qc, true);
 
     qregister_print(stdout, qc->qregister);
     cregister_print(stdout, qc->cregister);

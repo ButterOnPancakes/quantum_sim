@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-graph init_graph(const char *title, const char *xlabel, const char *ylabel) {
+graph graph_create(const char *title, const char *xlabel, const char *ylabel) {
     graph g = popen("gnuplot -persistent", "w");
     if (g == NULL) {
         perror("popen");
@@ -20,13 +20,13 @@ graph init_graph(const char *title, const char *xlabel, const char *ylabel) {
     fprintf(g, "set grid\n");
     return g;
 }
-void close_graph(graph g) {
+void graph_free(graph g) {
     if (g != NULL) {
         pclose(g);
     }
 }
 
-void plot(graph g, double *x, double *y, int n, const char *title) {
+void graph_plot(graph g, double *x, double *y, int n, const char *title) {
     if (g == NULL) {
         return;
     }
@@ -38,7 +38,7 @@ void plot(graph g, double *x, double *y, int n, const char *title) {
     fprintf(g, "e\n");
     fflush(g);
 }
-void histogram(graph g, double *x, double *y, int n, const char *title) {
+void graph_histogram(graph g, double *x, double *y, int n, const char *title) {
     if (g == NULL) {
         return;
     }

@@ -51,9 +51,9 @@ double run_grover(int n) {
     int N = 1 << n;
     int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));
 
-    ClassicalRegister *cregister = create_cregister(n);
-    QuantumRegister *qregister = create_qregister(n);
-    QuantumCircuit *qc = create_circuit(qregister, cregister);
+    ClassicalRegister *cregister = cregister_create(n);
+    QuantumRegister *qregister = qregister_create(n);
+    QuantumCircuit *qc = circuit_create(qregister, cregister);
 
     for(int i = 0; i < n; i++) {
         add_unitary_gate(qc, i, GATE_H);
@@ -75,9 +75,9 @@ double run_grover(int n) {
     }
 
     double time = circuit_execute(qc, true);
-    destroy_circuit(qc);
-    free_cregister(cregister);
-    free_qregister(qregister);
+    circuit_free(qc);
+    cregister_free(cregister);
+    qregister_free(qregister);
 
     free(ORACLE_MAT);
     free(S0_MAT);
@@ -108,8 +108,8 @@ int main() {
         printf("n=%d time=%f\n", i, y[i - Nmin]);
     }
 
-    graph g = init_graph("Grover Execution Time", "Number of Qubits", "Time (s)");
-    histogram(g, x, y, Nmax - Nmin, "");
-    close_graph(g);
+    graph g = graph_create("Grover Execution Time", "Number of Qubits", "Time (s)");
+    graph_histogram(g, x, y, Nmax - Nmin, "");
+    graph_free(g);
     return 0;
 }

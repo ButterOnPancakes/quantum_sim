@@ -15,14 +15,14 @@
 #include <time.h>
 
 void create_bell_state(double complex* zero_state, int n) {
-    QuantumCircuit *qc = create_circuit(n);
+    QuantumCircuit *qc = circuit_create(n);
 
     add_single_qbit_gate(qc, 0, H);
     add_double_qbit_gate(qc, 1, 0, CNOT);
 
     int *bits = circuit_execute(qc, zero_state);
 
-    destroy_circuit(qc);
+    circuit_free(qc);
     free(qc);
     free(bits);
 }
@@ -40,7 +40,7 @@ void test_teleportation() {
     double complex *final_state = fuse_qbits(transmitted, 1, bell_state, 2);
 
     // Alice part
-    QuantumCircuit *alice_qc = create_circuit(3);
+    QuantumCircuit *alice_qc = circuit_create(3);
 
     add_double_qbit_gate(alice_qc, 1, 0, CNOT);
     add_single_qbit_gate(alice_qc, 0, H);
@@ -50,9 +50,9 @@ void test_teleportation() {
     //Execute_opti does not work, maybe it has to do with bit order
     int *alice_bits = circuit_execute(alice_qc, final_state);
 
-    destroy_circuit(alice_qc); free(alice_qc);
+    circuit_free(alice_qc); free(alice_qc);
 
-    QuantumCircuit *bob_qc = create_circuit(3);
+    QuantumCircuit *bob_qc = circuit_create(3);
     // Bob's turn, he only has 
     if(alice_bits[0] == 0 && alice_bits[1] == 0) {
         add_single_qbit_gate(bob_qc, 2, ID);
@@ -72,17 +72,17 @@ void test_teleportation() {
     //Execute_opti does not work, maybe it has to do with bit order
     int *bob_bits = circuit_execute(bob_qc, final_state);
 
-    print_circuit(bob_qc);
+    circuit_print(bob_qc);
     
-    print_list(alice_bits, 2);
-    print_list(&bob_bits[2], 1);
+    print_int_array(alice_bits, 2);
+    print_int_array(&bob_bits[2], 1);
 
     free(alice_bits);
     free(bob_bits);
     
     free(final_state);
 
-    destroy_circuit(bob_qc);
+    circuit_free(bob_qc);
     free(bob_qc);
 
     printf("\n-------------------------------------------------------------------\n");

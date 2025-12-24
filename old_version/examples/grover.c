@@ -36,7 +36,7 @@ int main() {
 
     int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));
 
-    QuantumCircuit *qc = create_circuit(n);
+    QuantumCircuit *qc = circuit_create(n);
 
     for(int i = 0; i < n; i++) {
         add_single_qbit_gate(qc, i, H);
@@ -57,14 +57,14 @@ int main() {
         add_single_qbit_measure(qc, i, i);
     }
 
-    //print_circuit(qc);
+    //circuit_print(qc);
 
     int *bits = circuit_execute(qc, statevector);
-    print_list(bits, n);
+    print_int_array(bits, n);
     free(bits);
 
     free(statevector);
 
-    destroy_circuit(qc);
+    circuit_free(qc);
     free(qc);
 }

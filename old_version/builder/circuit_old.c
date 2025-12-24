@@ -41,13 +41,13 @@ double complex* fuse_qbits(double complex *q1, int n1, double complex *q2, int n
     return result;
 }
 
-QuantumCircuit *create_circuit(int n_qbits) {
+QuantumCircuit *circuit_create(int n_qbits) {
     QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));
     circuit->nb_qbits = n_qbits;
     circuit->gates = list_create();
     return circuit;
 }
-void destroy_circuit(QuantumCircuit *circuit) {
+void circuit_free(QuantumCircuit *circuit) {
     ListIterator iter = list_iterator_begin(circuit->gates);
     while (list_iterator_has_next(&iter)) {
         Gate *gate = list_iterator_next(&iter);
@@ -56,7 +56,7 @@ void destroy_circuit(QuantumCircuit *circuit) {
     list_destroy(circuit->gates);
 }
 
-void print_circuit(QuantumCircuit *circuit) {
+void circuit_print(QuantumCircuit *circuit) {
     for(int i = 0; i < circuit->nb_qbits; i++) {
         printf("q%.2d: ", i);
 

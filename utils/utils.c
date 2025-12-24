@@ -45,7 +45,7 @@ double fast_exp_d(double x, int n) {
     }
 }
 
-void print_list(int *bits, int n) {
+void print_int_array(int *bits, int n) {
     printf("[");
     for(int i = 0; i < n; i++) {
         if (i < n - 1) printf("%d, ", bits[i]);
@@ -53,7 +53,7 @@ void print_list(int *bits, int n) {
     }
 }
 
-void print_state(double complex *state, int n) {
+void print_complex_array(double complex *state, int n) {
     printf("[");
     for(int i = 0; i < n; i++) {
         if (i < n - 1) printf("%.2f + i%.2f, ", creal(state[i]), cimag(state[i]));

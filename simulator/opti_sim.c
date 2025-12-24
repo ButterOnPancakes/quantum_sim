@@ -23,11 +23,11 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
     FILE *log_file = NULL;
     if(log) {
         log_file = create_log_file("circuit_execution.log");
-        print_circuit(log_file, circuit);
+        circuit_print(log_file, circuit);
 
-        logger = create_logger();
-        set_channel(logger, log_file, true);
-        logMessage(logger, "INFO", "Starting circuit execution.");
+        logger = logger_create();
+        logger_set_channel(logger, log_file, true);
+        logger_message(logger, "INFO", "Starting circuit execution.");
     }
     
     double complex gm[4] = {1, 0, 0, 1};
@@ -79,17 +79,17 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
                 if(log) sprintf(buffer, "Unknown gate class encountered.");
                 break;
         }
-        if(log) logMessage(logger, "INFO", buffer);
+        if(log) logger_message(logger, "INFO", buffer);
     }
 
     double t1 = now_seconds();
     if(log) {
-        logMessage(logger, "INFO", "Circuit execution completed.");
-        logMessage(logger, "INFO", "Final statevector:");
-        print_qregister(log_file, circuit->qregister);
-        logMessage(logger, "INFO", "Classical register contents:");
-        print_cregister(log_file, circuit->cregister);
-        close_logger(logger);
+        logger_message(logger, "INFO", "Circuit execution completed.");
+        logger_message(logger, "INFO", "Final statevector:");
+        qregister_print(log_file, circuit->qregister);
+        logger_message(logger, "INFO", "Classical register contents:");
+        cregister_print(log_file, circuit->cregister);
+        logger_free(logger);
     }
     //printf("Execution Time : %.6f s\n", t1 - t0);
     return t1 - t0;
