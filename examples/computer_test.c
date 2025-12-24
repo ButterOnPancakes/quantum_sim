@@ -1,8 +1,8 @@
-#include "../../builder/new/circuit.h"
-#include "../../simulator/opti/opti_sim.h"
-#include "../../utils/utils.h"
-#include "../../utils/gnuplot.h"
-#include "../../utils/logger.h"
+#include "../builder/circuit.h"
+#include "../simulator/opti_sim.h"
+#include "../utils/utils.h"
+#include "../utils/gnuplot.h"
+#include "../utils/logger.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -29,7 +29,7 @@ int main() {
     add_measure(qc, 1, 1);
     add_measure(qc, 2, 2);
 
-    circuit_execute(qc);
+    circuit_execute(qc, true);
 
     print_qregister(stdout, qc->qregister);
     print_cregister(stdout, qc->cregister);

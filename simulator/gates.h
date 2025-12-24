@@ -1,7 +1,7 @@
 #ifndef GATES_H
 #define GATES_H
 
-#include "../../builder/new/circuit.h"
+#include "../builder/circuit.h"
 
 #include <complex.h>
 

@@ -5,10 +5,10 @@ LDFLAGS = -lm
 
 # Directories
 BIN_DIR = bin
-BUILDER_DIR = builder/new
-SIMULATOR_DIR = simulator/opti
+BUILDER_DIR = builder
+SIMULATOR_DIR = simulator
 UTILS_DIR = utils
-EXAMPLES_DIR = examples/new_builder
+EXAMPLES_DIR = examples
 
 SOURCES_DIR = $(BUILDER_DIR) $(SIMULATOR_DIR) $(UTILS_DIR)
 

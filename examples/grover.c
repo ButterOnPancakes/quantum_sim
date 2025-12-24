@@ -1,7 +1,7 @@
-#include "../../builder/new/circuit.h"
-#include "../../simulator/opti/opti_sim.h"
-#include "../../utils/utils.h"
-#include "../../utils/gnuplot.h"
+#include "../builder/circuit.h"
+#include "../simulator/opti_sim.h"
+#include "../utils/utils.h"
+#include "../utils/gnuplot.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,7 +89,7 @@ int main() {
     srand(time(NULL));
 
     int Nmin = 2; /* inclusive */
-    int Nmax = 13; /* exclusive */
+    int Nmax = 12; /* exclusive */
     int amount = 1;
 
     int threads = omp_get_max_threads();

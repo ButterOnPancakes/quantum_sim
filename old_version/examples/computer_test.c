@@ -1,5 +1,5 @@
-#include "../../builder/old/circuit_old.h"
-#include "../../simulator/naive/base_sim.h"
+#include "../builder/circuit_old.h"
+#include "../simulator/base_sim.h"
 #include "../../utils/utils.h"
 
 #include <stdio.h>

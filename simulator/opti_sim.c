@@ -12,9 +12,9 @@
 
 #include "gates.h"
 
-#include "../../utils/list.h"
-#include "../../utils/utils.h"
-#include "../../utils/logger.h"
+#include "../utils/list.h"
+#include "../utils/utils.h"
+#include "../utils/logger.h"
 
 double circuit_execute(QuantumCircuit *circuit, bool log) {
     double t0 = now_seconds();

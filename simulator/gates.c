@@ -1,6 +1,6 @@
 #include "gates.h"
 
-#include "../../builder/new/circuit.h"
+#include "../builder/circuit.h"
 
 #include <stdlib.h>
 #include <stdio.h>

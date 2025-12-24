@@ -1,7 +1,7 @@
 #ifndef OPTI_SIM_H
 #define OPTI_SIM_H
 
-#include "../../builder/new/circuit.h"
+#include "../builder/circuit.h"
 
 #include <complex.h>
 #include <stdbool.h>
