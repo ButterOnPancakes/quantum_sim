@@ -14,13 +14,14 @@
 
 #include <omp.h>
 
-void apply_corresponding_gate(double complex g[4], SingleBitGate gt) {
+void apply_corresponding_gate(double complex g[4], SingleBitGate gt, double phase) {
     switch(gt) {
         case GATE_I: break;
         case GATE_H: gate_h(g); break;
         case GATE_X: gate_x(g); break;
         case GATE_Y: gate_y(g); break;
         case GATE_Z: gate_z(g); break;
+        case GATE_PHASE: gate_phase(g, phase); break;
     }
 }
 
@@ -40,6 +41,11 @@ void gate_y(double complex g[4]) {
 void gate_z(double complex g[4]) {
     g[0] = 1.0; g[1] = 0.0;
     g[2] = 0.0; g[3] = -1.0;
+}
+
+void gate_phase(double complex g[4], double phase) {
+    g[0] = 1.0; g[1] = 0.0;
+    g[2] = 0.0; g[3] = cexp(I * phase);
 }
 
 uint64_t get_bit(uint64_t x, int pos, int nqbits) {

@@ -17,8 +17,8 @@ int main() {
     QuantumRegister *qregister = qregister_create(3);
     QuantumCircuit *qc = circuit_create(qregister, cregister);
 
-    add_unitary_gate(qc, 0, GATE_H);
-    add_control_gate(qc, 0, 1, GATE_X);
+    add_unitary_gate(qc, 0, GATE_H, 0.0);
+    add_control_gate(qc, 0, 1, GATE_X, 0.0);
     add_custom_gate(qc, 2, (int[]){1,2}, (double complex[]){
         1, 0, 0, 0,
         0, 1, 0, 0,

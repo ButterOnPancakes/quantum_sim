@@ -2,19 +2,21 @@
 
 #include <stdlib.h>
 
-Gate *create_unitary_gate(int t, SingleBitGate tg) {
+Gate *create_unitary_gate(int t, SingleBitGate tg, double phase) {
     Gate *gate = malloc(sizeof(Gate));
     gate->class = UNITARY;
     gate->gate.unitary.type = tg;
     gate->gate.unitary.qbit = t;
+    gate->gate.unitary.phase = phase;
     return gate;
 }
-Gate *create_control_gate(int c, int t, SingleBitGate tg) {
+Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase) {
     Gate *gate = malloc(sizeof(Gate));
     gate->class = CONTROL;
     gate->gate.control.control = c;
     gate->gate.control.qbit = t;
     gate->gate.control.type = tg;
+    gate->gate.control.phase = phase;
     return gate;
 }
 // Mat size must be 2^nb_qbits !

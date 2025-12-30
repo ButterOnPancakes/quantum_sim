@@ -5,13 +5,15 @@
 
 #include <complex.h>
 
-void apply_corresponding_gate(double complex g[4], SingleBitGate gt);
+void apply_corresponding_gate(double complex g[4], SingleBitGate gt, double phase);
 
 /* -------- common gates (2x2) -------- */
 void gate_h(double complex g[4]);
 void gate_x(double complex g[4]);
 void gate_y(double complex g[4]);
 void gate_z(double complex g[4]);
+
+void gate_phase(double complex g[4], double phase);
 
 /* -------- single-qubit gate (in-place) --------
    Gate g : 2x2 row-major [g00,g01,g10,g11]

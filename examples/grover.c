@@ -56,17 +56,17 @@ double run_grover(int n) {
     QuantumCircuit *qc = circuit_create(qregister, cregister);
 
     for(int i = 0; i < n; i++) {
-        add_unitary_gate(qc, i, GATE_H);
+        add_unitary_gate(qc, i, GATE_H, 0.0);
     }
 
     for(int i = 0; i < l; i++) {
         add_custom_gate(qc, n, targets, ORACLE_MAT, " ORA "); // Oracle
         for(int k = 0; k < n; k++) {
-            add_unitary_gate(qc, k, GATE_H);
+            add_unitary_gate(qc, k, GATE_H, 0.0);
         }
         add_custom_gate(qc, n, targets, S0_MAT, "  S0 "); // Diffusion Operator
         for(int k = 0; k < n; k++) {
-            add_unitary_gate(qc, k, GATE_H);
+            add_unitary_gate(qc, k, GATE_H, 0.0);
         }
     }
 
@@ -75,6 +75,7 @@ double run_grover(int n) {
     }
 
     double time = circuit_execute(qc, true);
+    cregister_print(stdout, qc->cregister);
     circuit_free(qc);
     cregister_free(cregister);
     qregister_free(qregister);

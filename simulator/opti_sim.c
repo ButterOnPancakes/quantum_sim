@@ -40,7 +40,7 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
         switch (gate->class) {
             case UNITARY: 
                 if(log) sprintf(buffer, "Applying unitary gate on qubit %d.", gate->gate.unitary.qbit);
-                apply_corresponding_gate(gm, gate->gate.unitary.type);
+                apply_corresponding_gate(gm, gate->gate.unitary.type, gate->gate.unitary.phase);
                 apply_single_qubit_inplace(
                     circuit->qregister->statevector, circuit->qregister->nb_qbits, 
                     gate->gate.unitary.qbit, 
@@ -50,7 +50,7 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
             
             case CONTROL:
                 if(log) sprintf(buffer, "Applying controlled gate with control qubit %d and target qubit %d.", gate->gate.control.control, gate->gate.control.qbit);
-                apply_corresponding_gate(gm, gate->gate.control.type);
+                apply_corresponding_gate(gm, gate->gate.control.type, gate->gate.control.phase);
                 apply_controlled_u_inplace(
                     circuit->qregister->statevector, circuit->qregister->nb_qbits, 
                     gate->gate.control.control, gate->gate.control.qbit, 

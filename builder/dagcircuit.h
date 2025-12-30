@@ -19,8 +19,8 @@ typedef struct {
 DAGCircuit* dagcircuit_create(QuantumRegister* qreg, ClassicalRegister* creg);
 void dagcircuit_free(DAGCircuit* circuit);
 
-void dagcircuit_add_unitary_gate(DAGCircuit *circuit, int t, SingleBitGate tg);
-void dagcircuit_add_control_gate(DAGCircuit *circuit, int c, int t, SingleBitGate tg);
+void dagcircuit_add_unitary_gate(DAGCircuit *circuit, int t, SingleBitGate tg, double phase);
+void dagcircuit_add_control_gate(DAGCircuit *circuit, int c, int t, SingleBitGate tg, double phase);
 // Mat size must be 2^nb_qbits !
 void dagcircuit_add_custom_gate(DAGCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label);
 void dagcircuit_add_measure(DAGCircuit *circuit, int qbit, int cbit);

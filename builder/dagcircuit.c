@@ -83,11 +83,11 @@ void dagcircuit_add_gate(DAGCircuit* dag, Gate* gate) {
     if (gate->class == CONTROL) free(qubits);
 }
 
-void dagcircuit_add_unitary_gate(DAGCircuit *circuit, int t, SingleBitGate tg) {
-    dagcircuit_add_gate(circuit, create_unitary_gate(t, tg));
+void dagcircuit_add_unitary_gate(DAGCircuit *circuit, int t, SingleBitGate tg, double phase) {
+    dagcircuit_add_gate(circuit, create_unitary_gate(t, tg, phase));
 }
-void dagcircuit_add_control_gate(DAGCircuit *circuit, int c, int t, SingleBitGate tg) {
-    dagcircuit_add_gate(circuit, create_control_gate(c, t, tg));
+void dagcircuit_add_control_gate(DAGCircuit *circuit, int c, int t, SingleBitGate tg, double phase) {
+    dagcircuit_add_gate(circuit, create_control_gate(c, t, tg, phase));
 }
 // Mat size must be 2^nb_qbits !
 void dagcircuit_add_custom_gate(DAGCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label) {

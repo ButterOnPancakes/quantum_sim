@@ -8,7 +8,8 @@ typedef enum {
     GATE_H,
     GATE_X,
     GATE_Y,
-    GATE_Z
+    GATE_Z,
+    GATE_PHASE
 } SingleBitGate;
 
 typedef struct {
@@ -21,11 +22,13 @@ typedef struct {
         struct {
             int qbit;
             SingleBitGate type;
+            double phase; //exp(I * phase)
         } unitary;
         struct {
             int control;
             int qbit;
             SingleBitGate type;
+            double phase; //exp(I * phase)
         } control;
         struct {
             int nb_qbits;
@@ -36,8 +39,8 @@ typedef struct {
     } gate;
 } Gate;
 
-Gate *create_unitary_gate(int t, SingleBitGate tg);
-Gate *create_control_gate(int c, int t, SingleBitGate tg);
+Gate *create_unitary_gate(int t, SingleBitGate tg, double phase);
+Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase);
 // Mat size must be 2^nb_qbits !
 Gate *create_custom_gate(int nb_qbits, int *t, double complex *mat, char *label);
 Gate *create_measure(int qbit, int cbit);
