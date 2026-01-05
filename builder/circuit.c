@@ -28,13 +28,17 @@ void circuit_free(QuantumCircuit *circuit) {
     free(circuit);
 }
 
-char *get_symbol(SingleBitGate gt) {
+char *get_symbol(SingleBitGate gt, double phase) {
     switch(gt) {
         case GATE_I: return "-|  I  |-";
         case GATE_H: return "-|  H  |-";
         case GATE_X: return "-|  X  |-";
         case GATE_Y: return "-|  Y  |-";
         case GATE_Z: return "-|  Z  |-";
+        case GATE_PHASE:
+            static char buffer[20];
+            snprintf(buffer, 20, "-|P%.2f|-", phase);
+            return buffer;
     }
     return "-|?????|-";
 }
@@ -64,11 +68,11 @@ void circuit_print(FILE *channel, QuantumCircuit *circuit) {
                     if(!found) fprintf(channel, "---------");
                     continue;
                 case UNITARY: 
-                    if(gate->gate.unitary.qbit == i) fprintf(channel, get_symbol(gate->gate.unitary.type));
+                    if(gate->gate.unitary.qbit == i) fprintf(channel, get_symbol(gate->gate.unitary.type, gate->gate.unitary.phase));
                     else fprintf(channel, "---------");
                     continue;
                 case CONTROL: 
-                    if(gate->gate.control.qbit == i) fprintf(channel, get_symbol(gate->gate.control.type));
+                    if(gate->gate.control.qbit == i) fprintf(channel, get_symbol(gate->gate.control.type, gate->gate.control.phase));
                     else if(gate->gate.control.control == i) fprintf(channel, "-|  *  |-");
                     else fprintf(channel, "---------");
                     continue;

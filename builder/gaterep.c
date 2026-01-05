@@ -1,6 +1,7 @@
 #include "gaterep.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 Gate *create_unitary_gate(int t, SingleBitGate tg, double phase) {
     Gate *gate = malloc(sizeof(Gate));

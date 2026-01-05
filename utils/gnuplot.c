@@ -42,13 +42,42 @@ void graph_histogram(graph g, double *x, double *y, int n, const char *title) {
     if (g == NULL) {
         return;
     }
-
+    
     fprintf(g, "set style data histograms\n");
     fprintf(g, "set style fill solid 0.5\n");
     fprintf(g, "plot '-' with boxes title '%s'\n", title);
     for (int i = 0; i < n; i++) {
         fprintf(g, "%lf %lf\n", x[i], y[i]);
     }
+    fprintf(g, "e\n");
+    fflush(g);
+}
+void graph_statevector(graph g, double complex *statevector, int n) {
+    if (g == NULL) {
+        return;
+    }
+
+    fprintf(g, "unset key\n");
+    fprintf(g, "set style fill solid 0.7 border -1\n");
+    fprintf(g, "set boxwidth 0.8\n");
+    fprintf(g, "set grid ytics\n");
+    fprintf(g, "set xrange [-0.5:%d-0.5]\n", n);
+    fprintf(g, "set yrange [0:1]\n");
+
+    /* X ticks at integer positions */
+    fprintf(g, "set xtics (");
+    for (int i = 0; i < n; i++) {
+        fprintf(g, "\"|%02b>\" %d%s", i, i, (i < n-1) ? ", " : "");
+    }
+    fprintf(g, ")\n");
+    
+    fprintf(g, "plot '-' using 1:2 with boxes title '%s'\n", "Qbit Measurement Probabilities");
+
+
+    for (int i = 0; i < n; i++) {
+        fprintf(g, "%lf %lf\n", (double)i, cabs(statevector[i]) * cabs(statevector[i]));
+    }
+
     fprintf(g, "e\n");
     fflush(g);
 }
