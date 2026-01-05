@@ -27,6 +27,13 @@ $(BIN_DIR)/$(EXAMPLES_DIR)/%: $(BIN_DIR)/$(EXAMPLES_DIR)/%.o $(OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+# Build all example executables
+all: $(patsubst $(EXAMPLES_DIR)/%.c,$(BIN_DIR)/$(EXAMPLES_DIR)/%,$(EXAMPLES))
+
+# Clean
+clean:
+	rm -rf $(BIN_DIR)/*
+
 # Individual example targets (for convenience)
 test_computer: $(BIN_DIR)/$(EXAMPLES_DIR)/computer_test
 	./$<
@@ -36,10 +43,6 @@ test_grover: $(BIN_DIR)/$(EXAMPLES_DIR)/grover
 	
 test_qft: $(BIN_DIR)/$(EXAMPLES_DIR)/qft
 	./$<
-
-# Clean
-clean:
-	rm -rf $(BIN_DIR)/*
 
 print-sources:
 	@echo "SOURCES: $(SOURCES)"
