@@ -11,11 +11,10 @@
 #include "../utils/list.h"
 #include "../utils/utils.h"
 
-QuantumCircuit *circuit_create(QuantumRegister *qregister, ClassicalRegister *cregister) {
+QuantumCircuit *circuit_create(int nb_qbits) {
     QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));
     circuit->gates = list_create();
-    circuit->qregister = qregister;
-    circuit->cregister = cregister;
+    circuit->nb_qbits = nb_qbits;
     return circuit;
 }
 void circuit_free(QuantumCircuit *circuit) {
@@ -44,7 +43,7 @@ char *get_symbol(SingleBitGate gt, double phase) {
 }
 
 void circuit_print(FILE *channel, QuantumCircuit *circuit) {
-    for(int i = 0; i < circuit->qregister->nb_qbits; i++) {
+    for(int i = 0; i < circuit->nb_qbits; i++) {
         fprintf(channel, "q%.2d: ", i);
 
         ListIterator iter = list_iterator_begin(circuit->gates);

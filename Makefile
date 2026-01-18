@@ -9,13 +9,19 @@ BUILDER_DIR = builder
 SIMULATOR_DIR = simulator
 UTILS_DIR = utils
 EXAMPLES_DIR = examples
+GUI_DIR = gui
 
 SOURCES_DIR = $(BUILDER_DIR) $(SIMULATOR_DIR) $(UTILS_DIR)
 
 SOURCES = $(shell find $(SOURCES_DIR) -name "*.c")
-OBJECTS = $(SOURCES:%.c=$(BIN_DIR)/%.o)
-
 EXAMPLES = $(shell find $(EXAMPLES_DIR) -name "*.c")
+GUI_SRC = $(shell find $(GUI_DIR) -name "*.c")
+
+OBJECTS = $(SOURCES:%.c=$(BIN_DIR)/%.o)
+GUI_OBJ = $(GUI_SRC:%.c=$(BIN_DIR)/%.o)
+
+# Raylib libraries
+LDFLAGS_GUI = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 # Pattern rule for object files
 $(BIN_DIR)/%.o: %.c
@@ -27,14 +33,17 @@ $(BIN_DIR)/$(EXAMPLES_DIR)/%: $(BIN_DIR)/$(EXAMPLES_DIR)/%.o $(OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Build all example executables
-all: $(patsubst $(EXAMPLES_DIR)/%.c,$(BIN_DIR)/$(EXAMPLES_DIR)/%,$(EXAMPLES))
+# Build gui
+gui_app: $(GUI_OBJ) $(OBJECTS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/gui_app $^ $(LDFLAGS_GUI)
 
-# Clean
+# Build all example executables
+all: $(patsubst $(EXAMPLES_DIR)/%.c,$(BIN_DIR)/$(EXAMPLES_DIR)/%,$(EXAMPLES)) gui_app
+
 clean:
 	rm -rf $(BIN_DIR)/*
 
-# Individual example targets (for convenience)
 test_computer: $(BIN_DIR)/$(EXAMPLES_DIR)/computer_test
 	./$<
 

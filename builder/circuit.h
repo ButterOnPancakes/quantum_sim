@@ -2,7 +2,6 @@
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
-#include "register.h"
 #include "gaterep.h"
 #include "../utils/list.h"
 
@@ -10,12 +9,11 @@
 #include <stdio.h>
 
 typedef struct {
-    QuantumRegister *qregister;
-    ClassicalRegister *cregister;
+    int nb_qbits;
     List* gates;
 } QuantumCircuit;
 
-QuantumCircuit *circuit_create(QuantumRegister *qregister, ClassicalRegister *cregister);
+QuantumCircuit *circuit_create(int nb_qbits);
 void circuit_free(QuantumCircuit *circuit);
 
 void circuit_print(FILE *channel, QuantumCircuit *circuit);

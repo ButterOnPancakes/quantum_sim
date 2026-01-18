@@ -16,17 +16,14 @@
 #include "../utils/utils.h"
 #include "../utils/logger.h"
 
-double circuit_execute(QuantumCircuit *circuit, bool log) {
+double circuit_execute(QuantumCircuit *circuit, QuantumRegister *qregister, ClassicalRegister *cregister, bool log) {
     double t0 = now_seconds();
 
     Logger *logger = NULL;
-    FILE *log_file = NULL;
     if(log) {
-        log_file = create_log_file("circuit_execution.log");
-        circuit_print(log_file, circuit);
-
-        logger = logger_create();
-        logger_set_channel(logger, log_file, true);
+        logger = logger_create("circuit_execution.log");
+        
+        circuit_print(logger->log_file, circuit);
         logger_message(logger, "INFO", "Starting circuit execution.");
     }
     
@@ -42,7 +39,7 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
                 if(log) sprintf(buffer, "Applying unitary gate on qubit %d.", gate->gate.unitary.qbit);
                 apply_corresponding_gate(gm, gate->gate.unitary.type, gate->gate.unitary.phase);
                 apply_single_qubit_inplace(
-                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    qregister->statevector, qregister->nb_qbits, 
                     gate->gate.unitary.qbit, 
                     gm
                 );
@@ -52,7 +49,7 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
                 if(log) sprintf(buffer, "Applying controlled gate with control qubit %d and target qubit %d.", gate->gate.control.control, gate->gate.control.qbit);
                 apply_corresponding_gate(gm, gate->gate.control.type, gate->gate.control.phase);
                 apply_controlled_u_inplace(
-                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    qregister->statevector, qregister->nb_qbits, 
                     gate->gate.control.control, gate->gate.control.qbit, 
                     gm
                 ); 
@@ -61,7 +58,7 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
             case CUSTOM:
                 if(log) sprintf(buffer, "Applying custom gate on %d qubits.", gate->gate.custom.nb_qbits);
                 apply_custom_inplace(
-                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                    qregister->statevector, qregister->nb_qbits, 
                     gate->gate.custom.qbits, gate->gate.custom.nb_qbits, 
                     gate->gate.custom.mat
                 );
@@ -69,8 +66,8 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
             
             case MEAS:
                 if(log) sprintf(buffer, "Measuring qubit %d into classical bit %d.", gate->gate.measure.qbit, gate->gate.measure.cbit);
-                circuit->cregister->bits[gate->gate.measure.cbit] = measure_qubit_inplace(
-                    circuit->qregister->statevector, circuit->qregister->nb_qbits, 
+                cregister->bits[gate->gate.measure.cbit] = measure_qubit_inplace(
+                    qregister->statevector, qregister->nb_qbits, 
                     gate->gate.measure.qbit
                 );
                 break;
@@ -86,9 +83,9 @@ double circuit_execute(QuantumCircuit *circuit, bool log) {
     if(log) {
         logger_message(logger, "INFO", "Circuit execution completed.");
         logger_message(logger, "INFO", "Final statevector:");
-        qregister_print(log_file, circuit->qregister);
+        qregister_print(logger->log_file, qregister);
         logger_message(logger, "INFO", "Classical register contents:");
-        cregister_print(log_file, circuit->cregister);
+        cregister_print(logger->log_file, cregister);
         logger_free(logger);
     }
     //printf("Execution Time : %.6f s\n", t1 - t0);

@@ -53,7 +53,7 @@ double run_grover(int n) {
 
     ClassicalRegister *cregister = cregister_create(n);
     QuantumRegister *qregister = qregister_create(n);
-    QuantumCircuit *qc = circuit_create(qregister, cregister);
+    QuantumCircuit *qc = circuit_create(n);
 
     for(int i = 0; i < n; i++) {
         add_unitary_gate(qc, i, GATE_H, 0.0);
@@ -74,8 +74,8 @@ double run_grover(int n) {
         add_measure(qc, i, i);
     }
 
-    double time = circuit_execute(qc, true);
-    cregister_print(stdout, qc->cregister);
+    double time = circuit_execute(qc, qregister, cregister, true);
+    cregister_print(stdout, cregister);
     circuit_free(qc);
     cregister_free(cregister);
     qregister_free(qregister);

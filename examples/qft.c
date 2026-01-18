@@ -45,23 +45,21 @@ int main() {
 
     int n = 4;
 
-    Logger *logger = logger_create();
-    FILE *log_file = create_log_file("qft.log");
-    logger_set_channel(logger, log_file, true);
+    Logger *logger = logger_create("qft.log");
 
     int threads = omp_get_max_threads();
     omp_set_num_threads(threads);
 
     ClassicalRegister *cregister = cregister_create(n);
     QuantumRegister *qregister = qregister_create(n);
-    QuantumCircuit *qc = circuit_create(qregister, cregister);
+    QuantumCircuit *qc = circuit_create(n);
 
-    qregister_print(log_file, qregister);
+    qregister_print(logger->log_file, qregister);
     int **targets = add_qft_gate(qc, n);
 
-    circuit_print(log_file, qc);
+    circuit_print(logger->log_file, qc);
 
-    circuit_execute(qc, true);
+    circuit_execute(qc, qregister, cregister, true);
 
     logger_message(logger, "INFO", "Quantum Fourier Transform executed successfully.");
     logger_free(logger);

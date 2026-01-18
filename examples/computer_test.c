@@ -15,7 +15,7 @@ int main() {
 
     ClassicalRegister *cregister = cregister_create(3);
     QuantumRegister *qregister = qregister_create(3);
-    QuantumCircuit *qc = circuit_create(qregister, cregister);
+    QuantumCircuit *qc = circuit_create(3);
 
     add_unitary_gate(qc, 0, GATE_H, 0.0);
     add_control_gate(qc, 0, 1, GATE_X, 0.0);
@@ -29,20 +29,13 @@ int main() {
     add_measure(qc, 1, 1);
     add_measure(qc, 2, 2);
 
-    circuit_execute(qc, true);
+    circuit_execute(qc, qregister, cregister, true);
 
-    qregister_print(stdout, qc->qregister);
-    cregister_print(stdout, qc->cregister);
-
-    double x[8];
-    double y[8];
-    for (int i = 0; i < 8; i++) {
-        x[i] = i;
-        y[i] = cabs(qregister->statevector[i]) * cabs(qregister->statevector[i]);
-    }
-
+    qregister_print(stdout, qregister);
+    cregister_print(stdout, cregister);
+    
     graph g = graph_create("Quantum Circuit Execution", "Qubit Index", "Probability Amplitude");
-    graph_histogram(g, x, y, 8, "");
+    graph_statevector(g, qregister->statevector, 1 << qregister->nb_qbits);
     graph_free(g);
 
     circuit_free(qc);
