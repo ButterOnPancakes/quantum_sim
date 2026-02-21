@@ -8,8 +8,8 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include "../utils/list.h"
-#include "../utils/utils.h"
+#include "../../utils/list.h"
+#include "../../utils/utils.h"
 
 QuantumCircuit *circuit_create(int nb_qbits) {
     QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));
@@ -17,10 +17,14 @@ QuantumCircuit *circuit_create(int nb_qbits) {
     circuit->nb_qbits = nb_qbits;
     return circuit;
 }
-void circuit_free(QuantumCircuit *circuit) {
+void circuit_free(QuantumCircuit *circuit, bool free_custom) {
     ListIterator iter = list_iterator_begin(circuit->gates);
     while (list_iterator_has_next(&iter)) {
         Gate *gate = list_iterator_next(&iter);
+        if(gate->class == CUSTOM && free_custom) {
+            free(gate->gate.custom.mat);
+            free(gate->gate.custom.qbits);
+        }
         free(gate);
     }
     list_destroy(circuit->gates);

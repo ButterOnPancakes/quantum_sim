@@ -1,8 +1,8 @@
 #include "../builder/circuit.h"
 #include "../simulator/opti_sim.h"
-#include "../utils/utils.h"
-#include "../utils/gnuplot.h"
-#include "../utils/logger.h"
+#include "../../utils/utils.h"
+#include "../../utils/gnuplot.h"
+#include "../../utils/logger.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -61,7 +61,7 @@ int main() {
     logger_message(logger, "INFO", "Quantum Fourier Transform executed successfully.");
     logger_free(logger);
 
-    circuit_free(qc);
+    circuit_free(qc, false);
     cregister_free(cregister);
 
     for(int i = 0; i < n / 2; i++) {

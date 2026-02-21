@@ -1,7 +1,7 @@
 #include "../builder/circuit.h"
 #include "../simulator/opti_sim.h"
-#include "../utils/utils.h"
-#include "../utils/gnuplot.h"
+#include "../../utils/utils.h"
+#include "../../utils/gnuplot.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,7 +74,7 @@ double run_grover(int n, int l) {
 
     double time = circuit_execute(qc, qregister, cregister, true);
     cregister_print(stdout, cregister);
-    circuit_free(qc);
+    circuit_free(qc, false);
     cregister_free(cregister);
     
     char title[1024];

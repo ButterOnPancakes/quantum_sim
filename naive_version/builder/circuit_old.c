@@ -8,8 +8,8 @@
 #include <math.h>
 #include <time.h>
 
-#include "../utils/list.h"
-#include "../utils/utils.h"
+#include "../../utils/list.h"
+#include "../../utils/utils.h"
 
 double complex *state_alloc(int nqubits) {
     uint64_t dim = 1ULL << nqubits;

@@ -10,7 +10,7 @@ graph graph_create(const char *title, const char *xlabel, const char *ylabel) {
         return NULL;
     }
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "opti_version/logs/%s.png", title);
+    snprintf(buffer, sizeof(buffer), "logs/%s.png", title);
 
     fprintf(g, "set terminal png\n");
     fprintf(g, "set output '%s'\n", buffer);
@@ -34,6 +34,24 @@ void graph_plot(graph g, double *x, double *y, int n, const char *title) {
     fprintf(g, "plot '-' with linespoints title '%s'\n", title);
     for (int i = 0; i < n; i++) {
         fprintf(g, "%lf %lf\n", x[i], y[i]);
+    }
+    fprintf(g, "e\n");
+    fflush(g);
+}
+void graph_plot_comparison(graph g, double *x, double *y1, double *y2, int n, const char *title1, const char *title2) {
+    if (g == NULL) return;
+
+    fprintf(g, "plot '-' with linespoints title '%s', '-' with linespoints title '%s'\n", title1, title2);
+    
+    // First dataset
+    for (int i = 0; i < n; i++) {
+        fprintf(g, "%lf %lf\n", x[i], y1[i]);
+    }
+    fprintf(g, "e\n");
+    
+    // Second dataset
+    for (int i = 0; i < n; i++) {
+        fprintf(g, "%lf %lf\n", x[i], y2[i]);
     }
     fprintf(g, "e\n");
     fflush(g);

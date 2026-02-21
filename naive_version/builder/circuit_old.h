@@ -1,7 +1,7 @@
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
-#include "../utils/list.h"
+#include "../../utils/list.h"
 
 #include <stdbool.h>
 #include <complex.h>

@@ -1,6 +1,6 @@
 #include "../builder/circuit_old.h"
 #include "../simulator/base_sim.h"
-#include "../utils/utils.h"
+#include "../../utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

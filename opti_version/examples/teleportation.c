@@ -1,6 +1,6 @@
 #include "../builder/circuit.h"
 #include "../simulator/opti_sim.h"
-#include "../utils/utils.h"
+#include "../../utils/utils.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -13,7 +13,7 @@ QuantumRegister *create_bell_state() {
     QuantumCircuit *qc = circuit_create(2);    
     add_unitary_gate(qc, 0, GATE_H, 0);
     circuit_execute(qc, qr, NULL, false);
-    circuit_free(qc);
+    circuit_free(qc, false);
     return qr;
 }
 
@@ -38,7 +38,7 @@ int main() {
     ClassicalRegister *alice_reg = cregister_create(2);
 
     circuit_execute(alice_circuit, qbits, alice_reg, false);
-    circuit_free(alice_circuit);
+    circuit_free(alice_circuit, false);
 
     //Tour de Bob, il n'a acces que aux bits mesurés et au 3e qbit
     QuantumCircuit *bob_circuit = circuit_create(3);
@@ -49,7 +49,9 @@ int main() {
         add_unitary_gate(bob_circuit, 2, GATE_Z, 0);
     }
     circuit_execute(bob_circuit, qbits, NULL, false);
-    circuit_free(bob_circuit);
+    circuit_free(bob_circuit, false);
+
+    cregister_free(alice_reg);
 
     // TODO : Moyen de split des qbits
     qregister_print(stdout, qbits);

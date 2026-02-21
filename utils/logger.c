@@ -1,5 +1,5 @@
 #include "logger.h"
-#include "utils.h"
+#include "../utils/utils.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@ Logger *logger_create(const char* filename) {
         perror("Failed to initialize logger");
         return NULL;
     }
-    char filepath[256] = "naive_version/logs/";
+    char filepath[256] = "logs/";
     strcat(filepath, filename);
     FILE *file = fopen(filepath, "w");
     if (file == NULL) {

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "../utils/utils.h"
+#include "../../utils/utils.h"
 
 double complex *state_alloc(int nqubits) {
     uint64_t dim = 1ULL << nqubits;

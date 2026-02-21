@@ -1,9 +1,9 @@
-#ifndef DAGCIRCUIT_H
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
 #include "gaterep.h"
-#include "../utils/list.h"
+#include <stdbool.h>
+#include "../../utils/list.h"
 
 #include <complex.h>
 #include <stdio.h>
@@ -14,7 +14,7 @@ typedef struct {
 } QuantumCircuit;
 
 QuantumCircuit *circuit_create(int nb_qbits);
-void circuit_free(QuantumCircuit *circuit);
+void circuit_free(QuantumCircuit *circuit, bool free_custom);
 
 void circuit_print(FILE *channel, QuantumCircuit *circuit);
 
@@ -24,5 +24,4 @@ void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg, d
 void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label);
 void add_measure(QuantumCircuit *circuit, int qbit, int cbit);
 
-#endif
 #endif
