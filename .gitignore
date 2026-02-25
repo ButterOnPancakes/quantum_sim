@@ -4,3 +4,6 @@ benchmarks
 vgcore.*
 .venv
 logs/*
+PROJECT_PRESENTATION.md
+PROJECT_PRESENTATION.pdf
+PROJECT_PRESENTATION.pptx

@@ -29,14 +29,14 @@ void init_matrices(int n) {
 
     /* Init S0 = 2|0><0| - In */
     S0_MAT = calloc(size * size, sizeof(double complex));
-    for(int i = 0; i < size; i++) {
+    for(unsigned long i = 0; i < size; i++) {
         S0_MAT[i * size + i] = -1.0;
     }
     S0_MAT[0] = 1.0;
 
     /* Init Oracle */
     ORACLE_MAT = calloc(size * size, sizeof(double complex));
-    for(int i = 0; i < size; i++) {
+    for(unsigned long i = 0; i < size; i++) {
         ORACLE_MAT[i * size + i] = 1.0;
     }
     for(int i = 0; i < nb_marked; i++) {

@@ -68,7 +68,7 @@ QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2) {
 void qregister_print(FILE *channel, QuantumRegister *q) {
     fprintf(channel, "[");
     uint64_t dim = 1ULL << q->nb_qbits;
-    for(int i = 0; i < dim; i++) {
+    for(uint64_t i = 0; i < dim; i++) {
         if (i < dim - 1) fprintf(channel, "%.2f + i%.2f, ", creal(q->statevector[i]), cimag(q->statevector[i]));
         else fprintf(channel, "%.2f + i%.2f]\n", creal(q->statevector[i]), cimag(q->statevector[i]));
     }

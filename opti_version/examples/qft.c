@@ -43,7 +43,7 @@ int **add_qft_gate(QuantumCircuit* qc, int n) {
 int main() {
     srand(time(NULL));
 
-    int n = 4;
+    int n = 24;
 
     Logger *logger = logger_create("qft.log");
 
@@ -56,7 +56,8 @@ int main() {
 
     circuit_print(logger->log_file, qc);
 
-    circuit_execute(qc, qregister, cregister, true);
+    double time = circuit_execute(qc, qregister, cregister, true);
+    printf("%f\n", time);
 
     logger_message(logger, "INFO", "Quantum Fourier Transform executed successfully.");
     logger_free(logger);

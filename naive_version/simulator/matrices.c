@@ -73,7 +73,8 @@ void matrix_print(Matrix *mat) {
     for (int i = 0; i < mat->rows; i++) {
         for (int j = 0; j < mat->cols; j++) {
             //printf("(%.2f + i%.2f) ", creal(mat->data[i][j]), cimag(mat->data[i][j]));
-            printf("%.2f ", creal(mat->data[i][j]));
+            if(mat->data[i][j] == 0 && 0 < i && 0 < j && i < mat->rows - 1 && j < mat->cols - 1) printf("     ");
+            else printf("%.2f ", creal(mat->data[i][j]));
         }
         printf("\n");
     }

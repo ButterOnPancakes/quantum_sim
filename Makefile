@@ -5,7 +5,7 @@ LDFLAGS = -fopenmp -lm -lpthread
 #LDFLAGS_GUI = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -fopenmp
 
 # The versions you want to compile
-VERSIONS = naive_version opti_version emms_version
+VERSIONS = naive_version opti_version emms_version ultraopti_version
 
 # Output Directory
 BIN_DIR = bin
