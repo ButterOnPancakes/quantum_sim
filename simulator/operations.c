@@ -1,7 +1,7 @@
 #include "operations.h"
 #include "../builder/registers.h"
-#include "../../utils/utils.h"
-#include "../../utils/fft.h"
+#include "../utils/utils.h"
+#include "../utils/fft.h"
 
 #include <complex.h>
 #include <stdlib.h>
