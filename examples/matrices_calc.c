@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "../../utils/utils.h"
+#include "../utils/utils.h"
 
 Matrix *get_tensored_gate_mat(Matrix *mat, int i, int n) {
     Matrix *gateMat;

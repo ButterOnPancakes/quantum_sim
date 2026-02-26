@@ -8,8 +8,8 @@
 #include <time.h>
 
 #include "matrices.h"
-#include "../../utils/list.h"
-#include "../../utils/utils.h"
+#include "../utils/list.h"
+#include "../utils/utils.h"
 
 bool collapse = true;
 
