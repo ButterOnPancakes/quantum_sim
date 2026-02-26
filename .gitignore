@@ -1,9 +1,5 @@
-bin
-benchmarks
 .vscode
 vgcore.*
 .venv
+bin
 logs/*
-PROJECT_PRESENTATION.md
-PROJECT_PRESENTATION.pdf
-PROJECT_PRESENTATION.pptx

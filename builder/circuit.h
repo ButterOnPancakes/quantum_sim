@@ -3,7 +3,7 @@
 
 #include "gaterep.h"
 #include <stdbool.h>
-#include "../../utils/list.h"
+#include "../utils/list.h"
 
 #include <complex.h>
 #include <stdio.h>

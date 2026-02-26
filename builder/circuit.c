@@ -8,8 +8,8 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include "../../utils/list.h"
-#include "../../utils/utils.h"
+#include "../utils/list.h"
+#include "../utils/utils.h"
 
 QuantumCircuit *circuit_create(int nb_qbits) {
     QuantumCircuit *circuit = malloc(sizeof(QuantumCircuit));

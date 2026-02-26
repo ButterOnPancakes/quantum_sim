@@ -8,7 +8,7 @@
 #include "../builder/circuit.h"
 #include "../builder/register.h"
 #include "../simulator/opti_sim.h"
-#include "../../utils/utils.h"
+#include "../utils/utils.h"
 
 // Classical GCD
 int gcd(int a, int b) {

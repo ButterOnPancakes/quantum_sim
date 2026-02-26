@@ -1,7 +1,7 @@
 #include "../builder/circuit.h"
 #include "../simulator/opti_sim.h"
-#include "../../utils/utils.h"
-#include "../../utils/gnuplot.h"
+#include "../utils/utils.h"
+#include "../utils/gnuplot.h"
 
 #include <stdio.h>
 #include <stdlib.h>
