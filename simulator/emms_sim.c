@@ -1,7 +1,19 @@
 #include "emms_sim.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <complex.h>
+
+/**
+ * BlockView: A mathematical view into a statevector.
+ * Represents a vector V where V[k] = data[k * stride].
+ * This abstraction allows us to perform operations on subspaces (qubits)
+ * without physical memory reordering.
+ */
+typedef struct {
+    double complex *data;
+    uint64_t stride;
+} BlockView;
 
 /**
  * Leaf Operator Application: y = M * x
@@ -170,10 +182,11 @@ void emms_apply_inplace(Node *node, BlockView in, BlockView out, BlockView aux, 
     apply_recursive(node, in, out, aux1, aux2, acc);
 }
 
-double complex *emms_compute_statevector(Node *circuit) {
+double complex *emms_compute_statevector(QuantumCircuit *qc) {
+    Node *circuit = qc->root;
     uint64_t dim = circuit->dim;
     double complex *psi_init = calloc(dim, sizeof(double complex));
-    psi_init[0] = 1.0; // Assume |0...0>
+    psi_init[0] = 1.0; // |0...0>
     
     double complex *psi_final = malloc(dim * sizeof(double complex));
     double complex *workspace = malloc(2 * dim * sizeof(double complex));

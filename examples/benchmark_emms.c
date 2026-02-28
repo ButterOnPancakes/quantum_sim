@@ -1,6 +1,7 @@
-#include "../builder/emms.h"
-#include "../../utils/gnuplot.h"
-#include "../../utils/utils.h"
+#include "../utils/gnuplot.h"
+#include "../utils/utils.h"
+#include "../builder/operations.h"
+#include "../builder/circuit.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -24,22 +25,17 @@ int main() {
 
     int idx = 0;
     for (int n_qubits = min_qubits; n_qubits <= max_qubits; n_qubits += step) {
-        // Create GHZ State Circuit: H(0), CNOT(0,1), CNOT(1,2), ...
-        Node *circuit = create_circuit(n_qubits);
+        QuantumCircuit *qc = circuit_create(n_qubits);
         
-        // H(0)
-        Node *h = create_h_gate();
-        circuit = add_gate_to_circuit(circuit, h, 0);
+        circuit_add_h_gate(qc, 0);
 
-        // CNOTs
         for (int i = 0; i < n_qubits - 1; i++) {
-            circuit = add_cnot_to_circuit(circuit, i, i+1);
+            circuit_add_cnot_gate(qc, i, i+1);
         }
 
-        y_none[idx] = (double)count_nodes(circuit);
+        y_none[idx] = (double)count_nodes(qc->root);
 
-        // Optimize
-        Node *optimized = copy_node(circuit);
+        Node *optimized = copy_node(qc->root);
         optimized = full_optimize(optimized);
         y_full[idx] = (double)count_nodes(optimized);
         int depth = tree_depth(optimized);
@@ -49,7 +45,7 @@ int main() {
                n_qubits, y_none[idx], y_full[idx], depth);
 
         free_node(optimized, true);
-        free_node(circuit, true);
+        circuit_free(qc);
         idx++;
     }
     
