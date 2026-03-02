@@ -12,7 +12,8 @@ Node *create_leaf(double complex *mat, int nb_qbits) {
     node->nb_qbits = nb_qbits;
     node->dim = 1ULL << nb_qbits;
     node->gt = LEAF;
-    node->nb_children = 0;
+    node->is_zero = false;
+    node->is_identity = false;
     
     uint64_t total_elements = node->dim * node->dim;
     node->data.leaf.mat = malloc(total_elements * sizeof(double complex));
@@ -31,11 +32,11 @@ Node *create_sum(Node *left, Node *right) {
     node->dim = left->dim;
     node->nb_qbits = left->nb_qbits;
     node->gt = OP_SUM;
+    node->is_zero = false;
+    node->is_identity = false;
 
-    node->nb_children = 2;
-    node->data.operation.children = malloc(node->nb_children * sizeof(Node*));
-    node->data.operation.children[0] = left;
-    node->data.operation.children[1] = right;
+    node->data.operation.left_child = left;
+    node->data.operation.right_child = right;
     return node;
 }
 Node *create_product(Node *left, Node *right) {
@@ -44,22 +45,11 @@ Node *create_product(Node *left, Node *right) {
     node->dim = left->dim;
     node->nb_qbits = left->nb_qbits;
     node->gt = OP_PRODUCT;
+    node->is_zero = false;
+    node->is_identity = false;
 
-    node->nb_children = 2;
-    node->data.operation.children = malloc(node->nb_children * sizeof(Node*));
-    node->data.operation.children[0] = left;
-    node->data.operation.children[1] = right;
-    return node;
-}
-Node *create_product_list(Node **nodes, int len) {
-    assert(len > 0);
-    Node *node = malloc(sizeof(Node));
-    node->dim = nodes[0]->dim;
-    node->nb_qbits = nodes[0]->nb_qbits;
-    node->gt = OP_PRODUCT;
-
-    node->nb_children = len;
-    node->data.operation.children = nodes;
+    node->data.operation.left_child = left;
+    node->data.operation.right_child = right;
     return node;
 }
 Node *create_tensor(Node *left, Node *right) {
@@ -67,38 +57,24 @@ Node *create_tensor(Node *left, Node *right) {
     node->dim = left->dim * right->dim;
     node->nb_qbits = left->nb_qbits + right->nb_qbits;
     node->gt = OP_TENSOR;
+    node->is_zero = false;
+    node->is_identity = false;
     
-    node->nb_children = 2;
-    node->data.operation.children = malloc(node->nb_children * sizeof(Node*));
-    node->data.operation.children[0] = left;
-    node->data.operation.children[1] = right;
-    return node;
-}
-Node *create_tensor_list(Node **nodes, int len) {
-    Node *node = malloc(sizeof(Node));
-    node->nb_qbits = 0;
-    for(int i = 0; i < len; i++) {
-        node->nb_qbits += nodes[i]->nb_qbits;
-    }
-    node->dim = 1ULL << node->nb_qbits;
-    node->gt = OP_TENSOR;
-    
-    node->nb_children = len;
-    node->data.operation.children = nodes;
+    node->data.operation.left_child = left;
+    node->data.operation.right_child = right;
     return node;
 }
 void free_node(Node *node, bool recursive) {
+    if(node == NULL) return;
     if(node->gt == LEAF) {
         free(node->data.leaf.mat);
         free(node);
     }
     else {
-        if(recursive) {
-            for(int i = 0; i < node->nb_children; i++) {
-                free_node(node->data.operation.children[i], recursive);
-            }
+        if(recursive && !node->is_zero && !node->is_identity) {
+            free_node(node->data.operation.left_child, recursive);
+            free_node(node->data.operation.right_child, recursive);
         }
-        free(node->data.operation.children);
         free(node);
     }
 }
@@ -111,11 +87,10 @@ Node *copy_node(Node *node) {
         uint64_t total = node->dim * node->dim;
         new_node->data.leaf.mat = malloc(total * sizeof(double complex));
         memcpy(new_node->data.leaf.mat, node->data.leaf.mat, total * sizeof(double complex));
-    } else {
-        new_node->data.operation.children = malloc(node->nb_children * sizeof(Node*));
-        for (int i = 0; i < node->nb_children; i++) {
-            new_node->data.operation.children[i] = copy_node(node->data.operation.children[i]);
-        }
+    }
+    else {
+        new_node->data.operation.left_child = copy_node(node->data.operation.left_child);
+        new_node->data.operation.right_child = copy_node(node->data.operation.right_child);
     }
     return new_node;
 }
@@ -133,38 +108,36 @@ void print_tree(Node *node, int depth) {
             printf("]\n");
             break;
         case OP_SUM:
-            printf("SUM (qbits: %d, dim: %lu, children: %d)\n", node->nb_qbits, (unsigned long)node->dim, node->nb_children);
+            printf("SUM (qbits: %d, dim: %lu)\n", node->nb_qbits, (unsigned long)node->dim);
             break;
         case OP_PRODUCT:
-            printf("PRODUCT (qbits: %d, dim: %lu, children: %d)\n", node->nb_qbits, (unsigned long)node->dim, node->nb_children);
+            printf("PRODUCT (qbits: %d, dim: %lu)\n", node->nb_qbits, (unsigned long)node->dim);
             break;
         case OP_TENSOR:
-            printf("TENSOR (qbits: %d, dim: %lu, children: %d)\n", node->nb_qbits, (unsigned long)node->dim, node->nb_children);
+            printf("TENSOR (qbits: %d, dim: %lu)\n", node->nb_qbits, (unsigned long)node->dim);
             break;
     }
 
-    if (node->gt != LEAF) {
-        for (int i = 0; i < node->nb_children; i++) {
-            print_tree(node->data.operation.children[i], depth + 1);
-        }
+    if (node->gt != LEAF && !node->is_zero && !node->is_identity) {
+        print_tree(node->data.operation.left_child, depth + 1);
+        print_tree(node->data.operation.right_child, depth + 1);
     }
 }
 int count_nodes(Node *node) {
     if (node == NULL) return 0;
     int count = 1;
-    if (node->gt != LEAF) {
-        for(int i = 0; i < node->nb_children; i++) {
-            count += count_nodes(node->data.operation.children[i]);
-        }
+    if (node->gt != LEAF && !node->is_zero && !node->is_identity) {
+        count += count_nodes(node->data.operation.left_child);
+        count += count_nodes(node->data.operation.right_child);
     }
     return count;
 }
 int tree_depth(Node *node) {
-    if (node == NULL || node->gt == LEAF) return 1;
-    int max_child_depth = 0;
-    for (int i = 0; i < node->nb_children; i++) {
-        int d = tree_depth(node->data.operation.children[i]);
-        if (d > max_child_depth) max_child_depth = d;
-    }
-    return 1 + max_child_depth;
+    if(node == NULL) return -1;
+    if (node->gt == LEAF || node->is_zero || node->is_identity) return 0;
+
+    int ld = tree_depth(node->data.operation.left_child);
+    int rd = tree_depth(node->data.operation.right_child);
+    if(ld > rd) return ld + 1;
+    return rd + 1;
 }

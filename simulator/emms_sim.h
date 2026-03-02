@@ -8,6 +8,6 @@
 /**
  * Computes the statevector output of the circuit assuming the initial state is |0...0>.
  */
-double complex *emms_compute_statevector(QuantumCircuit *circuit);
+void emms_compute_statevector(QuantumCircuit *circuit, double complex* vector, uint64_t dim);
 
 #endif

@@ -28,8 +28,6 @@ Node *calc_product(Node *left, Node *right) {
     
     double complex *new_mat = calloc(dim * dim, sizeof(double complex));
     
-    // Matrix Multiplication: res = left * right
-    // Optimize for small matrices
     for (uint64_t i = 0; i < dim; i++) {
         for (uint64_t k = 0; k < dim; k++) {
             double complex l_val = left->data.leaf.mat[MAT_IDX(i, k, dim)];
@@ -48,6 +46,10 @@ Node *calc_product(Node *left, Node *right) {
 
 bool is_identity(Node *node) {
     if (node == NULL) return false;
+    
+    if(node->is_zero) return false;
+    if(node->is_identity) return true;
+
     if (node->gt == LEAF) {
         uint64_t dim = node->dim;
         for (uint64_t i = 0; i < dim; i++) {
@@ -63,15 +65,16 @@ bool is_identity(Node *node) {
         return true;
     }
     if (node->gt == OP_TENSOR || node->gt == OP_PRODUCT) {
-        for (int i = 0; i < node->nb_children; i++) {
-            if (!is_identity(node->data.operation.children[i])) return false;
-        }
-        return true;
+        return is_identity(node->data.operation.left_child) && is_identity(node->data.operation.right_child);
     }
     return false;
 }
 bool is_zero(Node *node) {
     if (node == NULL) return false;
+    
+    if(node->is_zero) return true;
+    if(node->is_identity) return false;
+
     if (node->gt == LEAF) {
         uint64_t total = node->dim * node->dim;
         for (uint64_t i = 0; i < total; i++) {
@@ -79,16 +82,12 @@ bool is_zero(Node *node) {
         }
         return true;
     }
+    if(node->is_zero) return true;
     if (node->gt == OP_TENSOR || node->gt == OP_PRODUCT) {
-        for (int i = 0; i < node->nb_children; i++) {
-            if (is_zero(node->data.operation.children[i])) return true;
-        }
+        return is_zero(node->data.operation.left_child) || is_zero(node->data.operation.right_child);
     }
     if (node->gt == OP_SUM) {
-        for (int i = 0; i < node->nb_children; i++) {
-            if (!is_zero(node->data.operation.children[i])) return false;
-        }
-        return true;
+        return is_zero(node->data.operation.left_child) && is_zero(node->data.operation.right_child);
     }
     return false;
 }
@@ -96,6 +95,10 @@ bool nodes_equal(Node *a, Node *b) {
     if (a == b) return true;
     if (a == NULL || b == NULL) return false;
     if (a->gt != b->gt || a->nb_qbits != b->nb_qbits || a->dim != b->dim) return false;
+
+    if(a->is_identity && b->is_identity) return true;
+    if(a->is_zero && b->is_zero) return true;
+
     if (a->gt == LEAF) {
         uint64_t total = a->dim * a->dim;
         for (uint64_t i = 0; i < total; i++) {
@@ -103,238 +106,196 @@ bool nodes_equal(Node *a, Node *b) {
         }
         return true;
     }
-    if (a->nb_children != b->nb_children) return false;
-    for (int i = 0; i < a->nb_children; i++) {
-        if (!nodes_equal(a->data.operation.children[i], b->data.operation.children[i])) return false;
-    }
-    return true;
+    return nodes_equal(a->data.operation.left_child, b->data.operation.left_child) && 
+            nodes_equal(a->data.operation.right_child, b->data.operation.right_child);
 }
 
-Node *flatten_tree(Node *circuit) {
-    if(circuit->gt == LEAF) return circuit;
-
-    for (int i = 0; i < circuit->nb_children; i++) {
-        circuit->data.operation.children[i] = flatten_tree(circuit->data.operation.children[i]);
-    }
-
-    int nb_children = 0;
-    for (int i = 0; i < circuit->nb_children; i++) {
-        Node *child = circuit->data.operation.children[i];
-        if (child->gt == circuit->gt) {
-            nb_children += child->nb_children;
-        } else {
-            nb_children++;
-        }
-    }
-
-    if (nb_children == circuit->nb_children) return circuit;
-    
-    Node **new_children = malloc(nb_children * sizeof(Node*));
-    int wi = 0;
-    for (int ri = 0; ri < circuit->nb_children; ri++) {
-        Node *child = circuit->data.operation.children[ri];
-        
-        if (child->gt == circuit->gt) {
-            for (int k = 0; k < child->nb_children; k++) {
-                new_children[wi] = child->data.operation.children[k];
-                wi++;
-            }
-            free_node(child, false); 
-        } else {
-            new_children[wi] = child;
-            wi++;
-        }
-    }
-
-    free(circuit->data.operation.children);
-    circuit->nb_children = nb_children;
-    circuit->data.operation.children = new_children;
-
-    return circuit;
-}
 Node *simplify_nodes(Node *circuit) {
-    if (circuit == NULL || circuit->gt == LEAF) return circuit;
+    if(circuit == NULL) return circuit;
+    if(circuit->is_identity || circuit->is_zero) return circuit;
 
-    for (int i = 0; i < circuit->nb_children; i++) {
-        circuit->data.operation.children[i] = simplify_nodes(circuit->data.operation.children[i]);
-    }
-
-    if (circuit->gt == OP_PRODUCT) {
-        int i = 0;
-        while (i < circuit->nb_children) {
-            Node *child = circuit->data.operation.children[i];
-            if (is_identity(child) && circuit->nb_children > 1) {
-                for (int j = i; j < circuit->nb_children - 1; j++) {
-                    circuit->data.operation.children[j] = circuit->data.operation.children[j + 1];
-                }
-                circuit->nb_children--;
-                free_node(child, true);
-                continue;
-            }
-            if (is_zero(child)) {
-                for (int k = 0; k < circuit->nb_children; k++) {
-                    if (k != i) free_node(circuit->data.operation.children[k], true);
-                }
-                Node *res = circuit->data.operation.children[i]; // Return the zero node
-                free(circuit->data.operation.children);
-                free(circuit);
-                return res;
-            }
-            i++;
-        }
+    if(circuit->gt == LEAF) {
+        if(!circuit->is_zero && is_zero(circuit)) circuit->is_zero = true;
+        else if(!circuit->is_identity && is_identity(circuit)) circuit->is_identity = true;
+        return circuit;
     }
     
-    if (circuit->gt == OP_SUM) {
-        int i = 0;
-        while (i < circuit->nb_children) {
-            Node *child = circuit->data.operation.children[i];
-            if (is_zero(child) && circuit->nb_children > 1) {
-                for (int j = i; j < circuit->nb_children - 1; j++) {
-                    circuit->data.operation.children[j] = circuit->data.operation.children[j + 1];
-                }
-                circuit->nb_children--;
-                free_node(child, true);
-                continue;
-            }
-            i++;
-        }
-    }
+    circuit->data.operation.left_child = simplify_nodes(circuit->data.operation.left_child);
+    circuit->data.operation.right_child = simplify_nodes(circuit->data.operation.right_child);
 
-    if (circuit->nb_children == 1) {
-        Node *child = circuit->data.operation.children[0];
-        free(circuit->data.operation.children);
-        free(circuit);
-        return child;
+    if(!circuit->is_zero && is_zero(circuit)) {
+        free_node(circuit->data.operation.left_child, true);
+        free_node(circuit->data.operation.right_child, true);
+        circuit->data.operation.left_child = NULL;
+        circuit->data.operation.right_child = NULL;
+        circuit->is_zero = true;
+    }
+    else if(!circuit->is_identity && is_identity(circuit)) {
+        free_node(circuit->data.operation.left_child, true);
+        free_node(circuit->data.operation.right_child, true);
+        circuit->data.operation.left_child = NULL;
+        circuit->data.operation.right_child = NULL;
+        circuit->is_identity = true;
     }
 
     return circuit;
 }
 Node *product_fusion(Node *circuit) {
-    if (circuit == NULL || circuit->gt == LEAF) return circuit;
+    if (circuit == NULL || circuit->gt == LEAF || circuit->is_identity || circuit->is_zero) return circuit;
 
-    for (int i = 0; i < circuit->nb_children; i++) {
-        circuit->data.operation.children[i] = product_fusion(circuit->data.operation.children[i]);
-    }
+    circuit->data.operation.left_child = product_fusion(circuit->data.operation.left_child);
+    circuit->data.operation.right_child = product_fusion(circuit->data.operation.right_child);
+
+    Node *left = circuit->data.operation.left_child;
+    Node *right = circuit->data.operation.right_child;
 
     if (circuit->gt == OP_PRODUCT) {
-        int i = 0;
-        while (i < circuit->nb_children - 1) {
-            Node *curr = circuit->data.operation.children[i];
-            Node *next = circuit->data.operation.children[i+1];
-
-            if (curr->gt == LEAF && next->gt == LEAF && curr->nb_qbits == next->nb_qbits) {
-                Node *fused = calc_product(curr, next);
-                
-                circuit->data.operation.children[i] = fused;
-                for (int j = i + 1; j < circuit->nb_children - 1; j++) {
-                    circuit->data.operation.children[j] = circuit->data.operation.children[j+1];
-                }
-                
-                circuit->nb_children--;
-                free_node(curr, true);
-                free_node(next, true);
-                continue; 
-            }
-            i++;
+        if(left->gt == LEAF && right->gt == LEAF && left->dim == right->dim) {
+            Node *res = calc_product(left, right);
+            free_node(circuit, true);
+            return res;
         }
-    }
-
-    if (circuit->nb_children == 1) {
-        Node *child = circuit->data.operation.children[0];
-        free(circuit->data.operation.children);
-        free(circuit);
-        return child;
     }
 
     return circuit;
 }
 Node *sum_fusion(Node *circuit) {
-    if (circuit == NULL || circuit->gt == LEAF) return circuit;
+    if (circuit == NULL || circuit->gt == LEAF || circuit->is_identity || circuit->is_zero) return circuit;
 
-    for (int i = 0; i < circuit->nb_children; i++) {
-        circuit->data.operation.children[i] = sum_fusion(circuit->data.operation.children[i]);
-    }
+    circuit->data.operation.left_child = sum_fusion(circuit->data.operation.left_child);
+    circuit->data.operation.right_child = sum_fusion(circuit->data.operation.right_child);
+
+    Node *left = circuit->data.operation.left_child;
+    Node *right = circuit->data.operation.right_child;
 
     if (circuit->gt == OP_SUM) {
-        int i = 0;
-        while (i < circuit->nb_children - 1) {
-            Node *curr = circuit->data.operation.children[i];
-            Node *next = circuit->data.operation.children[i + 1];
-
-            if (curr->gt == LEAF && next->gt == LEAF && curr->nb_qbits == next->nb_qbits) {
-                Node *fused = calc_sum(curr, next);
-                circuit->data.operation.children[i] = fused;
-                for (int j = i + 1; j < circuit->nb_children - 1; j++) {
-                    circuit->data.operation.children[j] = circuit->data.operation.children[j + 1];
-                }
-                circuit->nb_children--;
-                free_node(curr, true);
-                free_node(next, true);
-                continue;
-            }
-            i++;
+        if(left->gt == LEAF && right->gt == LEAF && left->dim == right->dim) {
+            Node *res = calc_sum(left, right);
+            free_node(circuit, true);
+            return res;
         }
-    }
-
-    if (circuit->nb_children == 1) {
-        Node *child = circuit->data.operation.children[0];
-        free(circuit->data.operation.children);
-        free(circuit);
-        return child;
     }
 
     return circuit;
 }
 Node *factorise_tensor(Node *circuit) {
-    if (circuit == NULL || circuit->gt == LEAF) return circuit;
+    if(circuit == NULL || circuit->gt == LEAF || circuit->is_identity || circuit->is_zero) return circuit;
 
-    for (int i = 0; i < circuit->nb_children; i++) {
-        circuit->data.operation.children[i] = factorise_tensor(circuit->data.operation.children[i]);
+    Node *left = circuit->data.operation.left_child;
+    Node *right = circuit->data.operation.right_child;
+
+    if(circuit->gt == OP_PRODUCT && left->gt == OP_TENSOR && right->gt == OP_TENSOR && left->dim == right->dim) {
+        //Checks in case other simplifications have not been applied
+        if(left->is_zero || is_zero(left)) {
+            free_node(left, true);
+            free_node(right, true);
+            circuit->is_zero = true;
+            return circuit;
+        }
+        if(right->is_zero || is_zero(right)) {
+            free_node(left, true);
+            free_node(right, true);
+            circuit->is_zero = true;
+            return circuit;
+        }
+        if(left->is_identity || is_identity(left)) {
+            free_node(left, false);
+            free_node(circuit, false);
+            return right;
+        }
+        if(right->is_identity || is_identity(right)) {
+            free_node(right, false);
+            free_node(circuit, false);
+            return left;
+        }
+
+        Node *A = left->data.operation.left_child;
+        Node *B = left->data.operation.right_child;
+        Node *C = right->data.operation.left_child;
+        Node *D = right->data.operation.right_child;
+        if(A->dim != C->dim || B->dim != D->dim) return circuit;
+
+        Node *new_left = create_product(A, C);
+        Node *new_right = create_product(B, D);
+        new_left = factorise_tensor(new_left);
+        new_right = factorise_tensor(new_right);
+
+        Node *new_node = create_tensor(new_left, new_right);
+
+        free_node(left, false); free_node(right, false);
+        free_node(circuit, false);
+
+        return new_node;
     }
+    else {
+        circuit->data.operation.left_child = factorise_tensor(left);
+        circuit->data.operation.right_child = factorise_tensor(right);
+    }
+
+    return circuit;
+}
+
+Node *distrib_sum(Node *circuit) {
+    if (circuit == NULL || circuit->is_identity || circuit->is_zero || circuit->gt == LEAF) return circuit;
+
+    Node *left = circuit->data.operation.left_child;
+    Node *right = circuit->data.operation.right_child;
 
     if (circuit->gt == OP_PRODUCT) {
-        int amount = circuit->data.operation.children[0]->nb_children;
-        for(int i = 0; i < circuit->nb_children; i++) {
-            if(
-                circuit->data.operation.children[i]->gt != OP_TENSOR || 
-                circuit->data.operation.children[i]->nb_children != amount
-            ) return circuit;
-        }
+        if (right->gt == OP_SUM) {
+            // A * (B + C) -> (A * B) + (A * C)
+            Node *A = left;
+            Node *B = right->data.operation.left_child;
+            Node *C = right->data.operation.right_child;
 
-        Node **nodes = malloc(amount * sizeof(Node *));
-        for(int i = 0; i < amount; i++) {
-            Node **node_list = malloc(circuit->nb_children * sizeof(Node*));
-            for(int j = 0; j < circuit->nb_children; j++) {
-                node_list[j] = circuit->data.operation.children[j]->data.operation.children[i];
-            }
-            nodes[i] = create_product_list(node_list, circuit->nb_children);
-        }
-        Node *newnode = create_tensor_list(nodes, amount);
+            Node *new_left = create_product(copy_node(A), B);
+            Node *new_right = create_product(A, C);
 
-        for(int i = 0; i < circuit->nb_children; i++) {
-            free_node(circuit->data.operation.children[i], false);
+            circuit->gt = OP_SUM;
+            circuit->data.operation.left_child = distrib_sum(new_left);
+            circuit->data.operation.right_child = distrib_sum(new_right);
+            
+            free_node(right, false);
+            return circuit;
         }
-        free_node(circuit, false);
-        return newnode;
+        else if (left->gt == OP_SUM) {
+            // (A + B) * C -> (A * C) + (B * C)
+            Node *A = left->data.operation.left_child;
+            Node *B = left->data.operation.right_child;
+            Node *C = right;
+
+            Node *new_left = create_product(A, copy_node(C));
+            Node *new_right = create_product(B, C);
+
+            circuit->gt = OP_SUM;
+            circuit->data.operation.left_child = distrib_sum(new_left);
+            circuit->data.operation.right_child = distrib_sum(new_right);
+
+            free_node(left, false);
+            return circuit;
+        }
     }
+
+    circuit->data.operation.left_child = distrib_sum(left);
+    circuit->data.operation.right_child = distrib_sum(right);
 
     return circuit;
 }
 
 Node *full_optimize(Node *circuit) {
     if (circuit == NULL) return NULL;
-    // 1. Cleanup
-    circuit = flatten_tree(circuit);
-    circuit = simplify_nodes(circuit);
+
+    Node *current = circuit;
+    for(int i = 0; i < 1; i++) {
+        // 2. Algebraic simplifications
+        //circuit = distrib_sum(current);
+        current = factorise_tensor(current);
+        current = product_fusion(current);
+        current = sum_fusion(current);
+        
+        // 3. Cleanup
+        current = simplify_nodes(current);
+    }
     
-    // 2. Algebraic simplifications
-    circuit = factorise_tensor(circuit);
-    circuit = product_fusion(circuit);
-    circuit = sum_fusion(circuit);
-    
-    // 3. Cleanup
-    circuit = simplify_nodes(circuit);
-    circuit = flatten_tree(circuit);
-    
-    return circuit;
+    return current;
 }

@@ -19,7 +19,9 @@ int main() {
     print_tree(qc->root, 0);
 
     printf("\nComputing statevector...\n");
-    double complex *sv = emms_compute_statevector(qc);
+    double complex *sv = calloc(1 << 2, sizeof(double complex));
+    sv[0] = 1;
+    emms_compute_statevector(qc, sv, 1 << 2);
 
     printf("\nResulting Statevector:\n");
     for (int i = 0; i < 4; i++) {

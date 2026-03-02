@@ -3,201 +3,152 @@
 #include <stdlib.h>
 #include <string.h>
 #include <complex.h>
+#include <assert.h>
 
-/**
- * BlockView: A mathematical view into a statevector.
- * Represents a vector V where V[k] = data[k * stride].
- * This abstraction allows us to perform operations on subspaces (qubits)
- * without physical memory reordering.
- */
+/*
+Representation of a reshaped column vector : See proof for more details
+Use : vector[k] = data[k * offset_factor]
+*/ 
 typedef struct {
+    uint64_t data_size; //Malloc-ed size
+    uint64_t vector_size; //Vector size
     double complex *data;
-    uint64_t stride;
-} BlockView;
+    uint64_t offset_factor;
+} Split;
 
-/**
- * Leaf Operator Application: y = M * x
- * Maps to: out[i] = sum_j (mat[i,j] * in[j])
- */
-static void apply_leaf_op(uint64_t dim, const double complex *mat, 
-                          BlockView in, BlockView out, BlockView scratch,
-                          bool accumulate) {
-    BlockView src = in;
+Split copy_split(Split split) {
+    Split s;
+    s.data_size = split.data_size;
+    s.vector_size = split.vector_size;
+    s.offset_factor = split.offset_factor;
+    s.data = malloc(split.data_size * sizeof(double complex));
+    for(uint64_t i = 0; i < split.data_size; i++) s.data[i] = split.data[i];
+    return s;
+}
+void free_split(Split split) {
+    free(split.data);
+}
+
+void apply_node(Node *node, Split vector, Split output);
+
+void apply_leaf(Node *node, Split vector, Split output) {
+    assert(node != NULL && node->gt == LEAF && node->dim == vector.vector_size);
+    assert(vector.data != output.data);
+
+    double complex *mat = node->data.leaf.mat; //mat[i * size + k]
+    for(uint64_t i = 0; i < vector.vector_size; i++) {
+        output.data[i * output.offset_factor] = 0;
+        for(uint64_t k = 0; k < node->dim; k++) {
+            output.data[i * output.offset_factor] += mat[i * node->dim + k] * vector.data[k * vector.offset_factor];
+        }
+    }
+}
+
+void apply_sum(Node *node, Split input, Split output) {
+    assert(node != NULL && node->gt == OP_SUM);
+
+    Split temp = copy_split(output);
+
+    apply_node(node->data.operation.left_child, input, output);
+    apply_node(node->data.operation.right_child, input, temp);
+
+    for(uint64_t i = 0; i < output.vector_size; i++) output.data[i * output.offset_factor] += temp.data[i * temp.offset_factor];
+
+    free_split(temp);
+}
+
+void apply_product(Node *node, Split input, Split output) {
+    assert(node != NULL && node->gt == OP_PRODUCT);
+
+    Split temp = copy_split(output);
+
+    apply_node(node->data.operation.right_child, input, temp);
+    apply_node(node->data.operation.left_child, temp, output);
+
+    free_split(temp);
+}
+
+void apply_tensor(Node *node, Split input, Split output) {
+    assert(node != NULL && node->gt == OP_TENSOR);
+
+    Split temp = copy_split(output);
     
-    // Alias protection: If in and out overlap, copy in to scratch first
-    if (in.data == out.data) {
-        for (uint64_t i = 0; i < dim; i++) scratch.data[i * scratch.stride] = in.data[i * in.stride];
-        src = scratch;
+    Node *A = node->data.operation.left_child;
+    Node *B = node->data.operation.right_child;
+
+    uint64_t A_dim = A->dim;
+    uint64_t B_dim = B->dim;
+
+    // Revient à calculer M' = B * Mk(phi) (chaque colonne C' <- B * C)
+    for(uint64_t col = 0; col < A_dim; col++) {
+        Split col_in = {
+            .data = &input.data[col * B_dim * input.offset_factor],
+            .offset_factor = input.offset_factor,
+            .vector_size = B_dim,
+            .data_size = B_dim * input.offset_factor //Change the size to avoid segfaults bc of wrong mem access
+        };
+        Split col_out = {
+            .data = &temp.data[col * B_dim * temp.offset_factor],
+            .offset_factor = temp.offset_factor,
+            .vector_size = B_dim,
+            .data_size = B_dim * temp.offset_factor //Change the size to avoid segfaults bc of wrong mem access
+        };
+        apply_node(B, col_in, col_out);
     }
 
-    // Specialized 1-qubit gate (2x2 matrix)
-    if (dim == 2) {
-        double complex x0 = src.data[0];
-        double complex x1 = src.data[src.stride];
-        
-        double complex y0 = mat[0] * x0 + mat[1] * x1;
-        double complex y1 = mat[2] * x0 + mat[3] * x1;
+    //Calcul de M'' = M' * A^T (chaque ligne L' <- L * A^T soit L'^T <- A * L^T)
+    for(uint64_t row = 0; row < B_dim; row++) {
+        Split row_in = {
+            .data = &temp.data[row * temp.offset_factor],
+            .offset_factor = B_dim * temp.offset_factor,
+            .vector_size = A_dim,
+            .data_size = temp.data_size - row * temp.offset_factor
+        };
+        Split row_out = {
+            .data = &output.data[row * output.offset_factor],
+            .offset_factor = B_dim * output.offset_factor,
+            .vector_size = A_dim,
+            .data_size = output.data_size - row * output.offset_factor
+        };
+        apply_node(A, row_in, row_out);
+    }
 
-        if (accumulate) {
-            out.data[0] += y0;
-            out.data[out.stride] += y1;
-        } else {
-            out.data[0] = y0;
-            out.data[out.stride] = y1;
-        }
+    free_split(temp);
+}
+
+void apply_node(Node *node, Split vector, Split output) {
+    assert(node != NULL);
+    assert(vector.data != output.data && vector.vector_size == output.vector_size);
+    assert(vector.vector_size == node->dim);
+    if(node->is_zero) {
+        for(uint64_t i = 0; i < output.vector_size; i++) output.data[i * output.offset_factor] = 0;
+        return;
+    }
+    if(node->is_identity) {
+        for(uint64_t i = 0; i < output.vector_size; i++) output.data[i * output.offset_factor] = vector.data[i * vector.offset_factor];
         return;
     }
 
-    // General Matrix-Vector Multiplication
-    for (uint64_t i = 0; i < dim; i++) {
-        double complex sum = 0;
-        for (uint64_t j = 0; j < dim; j++) {
-            sum += mat[i * dim + j] * src.data[j * src.stride];
-        }
-        if (accumulate) out.data[i * out.stride] += sum;
-        else out.data[i * out.stride] = sum;
+    switch(node->gt) {
+        case LEAF: apply_leaf(node, vector, output); break;
+        case OP_SUM: apply_sum(node, vector, output); break;
+        case OP_PRODUCT: apply_product(node, vector, output); break;
+        case OP_TENSOR: apply_tensor(node, vector, output); break;
     }
 }
 
-/**
- * Recursive Operator Application
- * Handles the algebraic structure of the Quantum Circuit.
- */
-static void apply_recursive(Node *op, BlockView in, BlockView out, 
-                            BlockView aux1, BlockView aux2, bool accumulate) {
-    uint64_t dim = op->dim;
+void emms_compute_statevector(QuantumCircuit *circuit, double complex* vector, uint64_t dim) {
+    assert(dim == (uint64_t) (1 << circuit->nb_qbits));
+    Split output = {
+        .data_size = dim,
+        .vector_size = dim,
+        .data = vector,
+        .offset_factor = 1
+    };
+    Split input = copy_split(output);
+    //Split temp = copy_split(input);
 
-    switch (op->gt) {
-        case LEAF:
-            apply_leaf_op(dim, op->data.leaf.mat, in, out, aux1, accumulate);
-            break;
+    apply_node(circuit->root, input, output);
 
-        case OP_SUM:
-            // Linear Combination: Out = sum( Op_i * In )
-            if (!accumulate) {
-                for (uint64_t k = 0; k < dim; k++) out.data[k * out.stride] = 0;
-            }
-            for (int i = 0; i < op->nb_children; i++) {
-                apply_recursive(op->data.operation.children[i], in, out, aux1, aux2, true);
-            }
-            break;
-
-        case OP_PRODUCT: {
-            // Sequential Composition: Out = (Op_n * ... * Op_1) * In
-            if (op->nb_children == 0) {
-                for (uint64_t k = 0; k < dim; k++) {
-                    double complex val = in.data[k * in.stride];
-                    if (accumulate) out.data[k * out.stride] += val; else out.data[k * out.stride] = val;
-                }
-                return;
-            }
-
-            BlockView current_state = in;
-            BlockView bufA = aux1, bufB = aux2;
-
-            for (int i = op->nb_children - 1; i >= 0; i--) {
-                bool is_last = (i == 0);
-                Node *child = op->data.operation.children[i];
-                
-                if (is_last) {
-                    apply_recursive(child, current_state, out, bufA, bufB, accumulate);
-                } else {
-                    // Intermediate steps overwrite buffer
-                    apply_recursive(child, current_state, bufA, bufB, bufB, false);
-                    current_state = bufA;
-                    // Ping-pong buffers for next iteration
-                    BlockView tmp = bufA; bufA = bufB; bufB = tmp;
-                }
-            }
-            break;
-        }
-
-        case OP_TENSOR: {
-            // Kronecker Product Application: (A ⊗ B) * Psi
-            // Decomposed as: (A ⊗ I) * (I ⊗ B) * Psi
-            int n = op->nb_children;
-            uint64_t *child_strides = malloc(n * sizeof(uint64_t));
-            uint64_t accumulated_stride = 1;
-            for (int i = n - 1; i >= 0; i--) {
-                child_strides[i] = accumulated_stride;
-                accumulated_stride *= op->data.operation.children[i]->dim;
-            }
-
-            BlockView current_state = in;
-            BlockView bufA = aux1, bufB = aux2;
-
-            for (int i = n - 1; i >= 0; i--) {
-                bool is_last_gate = (i == 0);
-                Node *child = op->data.operation.children[i];
-                
-                uint64_t c_dim = child->dim;
-                uint64_t c_stride = child_strides[i];
-                
-                // Subspace dimensions
-                uint64_t outer_dim = dim / (c_dim * c_stride);
-                uint64_t inner_dim = c_stride;
-
-                BlockView next_target = is_last_gate ? out : bufA;
-                bool next_acc = is_last_gate ? accumulate : false;
-
-                // Apply child operator to every subspace fiber
-                for (uint64_t o = 0; o < outer_dim; o++) {
-                    for (uint64_t k = 0; k < inner_dim; k++) {
-                        uint64_t base_offset = o * c_dim * c_stride + k;
-                        
-                        // Map local subspace to global memory addresses
-                        BlockView sub_in  = { current_state.data + base_offset * current_state.stride, current_state.stride * c_stride };
-                        BlockView sub_out = { next_target.data + base_offset * next_target.stride, next_target.stride * c_stride };
-                        
-                        // Scratches must also preserve subspace strides
-                        BlockView sa = { bufB.data + base_offset * bufB.stride, bufB.stride * c_stride };
-                        BlockView sb = { bufA.data + base_offset * bufA.stride, bufA.stride * c_stride };
-
-                        // Mathematical edge case: if we are writing to final output, check for buffer aliasing
-                        if (!is_last_gate && !accumulate) {
-                            sb = (BlockView){ out.data + base_offset * out.stride, out.stride * c_stride };
-                        } else if (is_last_gate && current_state.data == bufA.data) {
-                            sb = sa;
-                        }
-
-                        apply_recursive(child, sub_in, sub_out, sa, sb, next_acc);
-                    }
-                }
-
-                if (!is_last_gate) {
-                    current_state = bufA;
-                    BlockView tmp = bufA; bufA = bufB; bufB = tmp;
-                }
-            }
-            free(child_strides);
-            break;
-        }
-    }
-}
-
-void emms_apply_inplace(Node *node, BlockView in, BlockView out, BlockView aux, bool acc) {
-    // Split the double-sized aux buffer into two working spaces for the ping-pong logic
-    BlockView aux1 = { aux.data, aux.stride };
-    BlockView aux2 = { aux.data + node->dim, aux.stride };
-    apply_recursive(node, in, out, aux1, aux2, acc);
-}
-
-double complex *emms_compute_statevector(QuantumCircuit *qc) {
-    Node *circuit = qc->root;
-    uint64_t dim = circuit->dim;
-    double complex *psi_init = calloc(dim, sizeof(double complex));
-    psi_init[0] = 1.0; // |0...0>
-    
-    double complex *psi_final = malloc(dim * sizeof(double complex));
-    double complex *workspace = malloc(2 * dim * sizeof(double complex));
-    
-    BlockView bv_in  = { psi_init, 1 };
-    BlockView bv_out = { psi_final, 1 };
-    BlockView bv_aux = { workspace, 1 };
-    
-    emms_apply_inplace(circuit, bv_in, bv_out, bv_aux, false);
-    
-    free(psi_init);
-    free(workspace);
-    return psi_final;
+    free_split(input);
 }

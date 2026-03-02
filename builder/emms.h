@@ -16,14 +16,17 @@ struct node_s {
     GateType gt;
     int nb_qbits;
     uint64_t dim;
-    int nb_children;
+    bool is_zero;
+    bool is_identity;
+
     union {
         struct {
             double complex *mat;
         } leaf;
 
         struct {
-            struct node_s **children;
+            struct node_s *left_child;
+            struct node_s *right_child;
         } operation;
     } data;
 };
@@ -35,9 +38,7 @@ Node *create_gate_layer(Node* gate_node, int total_qbits, int start_index);
 
 Node *create_sum(Node *left, Node *right);
 Node *create_product(Node *left, Node *right);
-Node *create_product_list(Node **nodes, int len);
 Node *create_tensor(Node *left, Node *right);
-Node *create_tensor_list(Node **nodes, int len);
 void free_node(Node *node, bool recursive);
 Node *copy_node(Node *node);
 

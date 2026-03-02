@@ -20,13 +20,8 @@ Node *create_identity_tree(int nb_tensor) {
     if(nb_tensor == 1) {
         return create_identity_gate();
     }
-    else if(nb_tensor % 2 == 0) {
-        Node *left = create_identity_tree(nb_tensor / 2);
-        Node *right = create_identity_tree(nb_tensor / 2);
-        return create_tensor(left, right);
-    }
     else {
-        int nb_left = (nb_tensor - 1) / 2;
+        int nb_left = nb_tensor / 2;
         Node *left = create_identity_tree(nb_left);
         Node *right = create_identity_tree(nb_tensor - nb_left);
         return create_tensor(left, right);
@@ -50,12 +45,17 @@ Node *create_gate_layer(Node* gate_node, int total_qbits, int start_index) {
     
     return current_layer;
 }
-Node *create_full_tensor_layer(Node **nodes, int n) {
-    Node *res = nodes[0];
-    for (int i = 1; i < n; i++) {
-        res = create_tensor(res, nodes[i]);
+Node *create_full_tensor_layer(Node **nodes, int nb_tensor) {
+    assert(nb_tensor > 0);
+    if(nb_tensor == 1) {
+        return nodes[0];
     }
-    return res;
+    else {
+        int nb_left = nb_tensor / 2;
+        Node *left = create_full_tensor_layer(nodes, nb_left);
+        Node *right = create_full_tensor_layer(&nodes[nb_left], nb_tensor - nb_left);
+        return create_tensor(left, right);
+    }
 }
 
 QuantumCircuit *circuit_create(int nb_qbits) {
