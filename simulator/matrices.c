@@ -118,7 +118,7 @@ double matrix_norm(Matrix *A) {
 }
 void matrix_normalise(Matrix *mat) {
     double norm = matrix_norm(mat);
-    if(norm < 0.01) return;
+    if(norm < 1e-10) return;
     for(int i = 0; i < mat->rows; i++) {
         for(int j = 0; j < mat->cols; j++) {
             mat->data[i][j] = mat->data[i][j] / norm;
