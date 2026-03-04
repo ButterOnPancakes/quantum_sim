@@ -4,15 +4,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 Logger *logger_create(const char* filename) {
-    Logger *logger = (Logger *)malloc(sizeof(Logger));
+    Logger *logger = (Logger *)malloc_custom(sizeof(Logger));
+    assert(logger != NULL);
     if (logger == NULL) {
         perror("Failed to initialize logger");
         return NULL;
     }
+    int size = strlen(filename);
+    assert(size < 200);
     char filepath[256] = "logs/";
-    strcat(filepath, filename);
+    snprintf(filepath, sizeof(filepath), "logs/%s", filename);
     FILE *file = fopen(filepath, "w");
     if (file == NULL) {
         perror("Failed to create log file");

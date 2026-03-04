@@ -7,8 +7,11 @@
 #include <string.h>
 #include <math.h>
 
+#include "../utils/utils.h"
+
 Node *create_leaf(double complex *mat, int nb_qbits) {
-    Node *node = malloc(sizeof(Node));
+    Node *node = malloc_custom(sizeof(Node));
+    assert(node != NULL);
     node->nb_qbits = nb_qbits;
     node->dim = 1ULL << nb_qbits;
     node->gt = LEAF;
@@ -16,7 +19,8 @@ Node *create_leaf(double complex *mat, int nb_qbits) {
     node->is_identity = false;
     
     uint64_t total_elements = node->dim * node->dim;
-    node->data.leaf.mat = malloc(total_elements * sizeof(double complex));
+    node->data.leaf.mat = malloc_custom(total_elements * sizeof(double complex));
+    assert(node->data.leaf.mat != NULL);
     memcpy(node->data.leaf.mat, mat, total_elements * sizeof(double complex));
     
     return node;
@@ -28,7 +32,8 @@ Node *create_1q_leaf(double complex a11, double complex a12, double complex a21,
 
 Node *create_sum(Node *left, Node *right) {
     assert(left->dim == right->dim);
-    Node *node = malloc(sizeof(Node));
+    Node *node = malloc_custom(sizeof(Node));
+    assert(node != NULL);
     node->dim = left->dim;
     node->nb_qbits = left->nb_qbits;
     node->gt = OP_SUM;
@@ -41,7 +46,8 @@ Node *create_sum(Node *left, Node *right) {
 }
 Node *create_product(Node *left, Node *right) {
     assert(left->dim == right->dim);
-    Node *node = malloc(sizeof(Node));
+    Node *node = malloc_custom(sizeof(Node));
+    assert(node != NULL);
     node->dim = left->dim;
     node->nb_qbits = left->nb_qbits;
     node->gt = OP_PRODUCT;
@@ -53,7 +59,8 @@ Node *create_product(Node *left, Node *right) {
     return node;
 }
 Node *create_tensor(Node *left, Node *right) {
-    Node *node = malloc(sizeof(Node));
+    Node *node = malloc_custom(sizeof(Node));
+    assert(node != NULL);
     node->dim = left->dim * right->dim;
     node->nb_qbits = left->nb_qbits + right->nb_qbits;
     node->gt = OP_TENSOR;
@@ -71,7 +78,7 @@ void free_node(Node *node, bool recursive) {
         free(node);
     }
     else {
-        if(recursive && !node->is_zero && !node->is_identity) {
+        if(recursive) {
             free_node(node->data.operation.left_child, recursive);
             free_node(node->data.operation.right_child, recursive);
         }
@@ -80,12 +87,14 @@ void free_node(Node *node, bool recursive) {
 }
 Node *copy_node(Node *node) {
     if (node == NULL) return NULL;
-    Node *new_node = malloc(sizeof(Node));
+    Node *new_node = malloc_custom(sizeof(Node));
+    assert(new_node != NULL);
     *new_node = *node; // shallow copy fields
     
     if (node->gt == LEAF) {
         uint64_t total = node->dim * node->dim;
-        new_node->data.leaf.mat = malloc(total * sizeof(double complex));
+        new_node->data.leaf.mat = malloc_custom(total * sizeof(double complex));
+        assert(new_node->data.leaf.mat != NULL);
         memcpy(new_node->data.leaf.mat, node->data.leaf.mat, total * sizeof(double complex));
     }
     else {

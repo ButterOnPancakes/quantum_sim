@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <complex.h>
 #include <math.h>
+#include <assert.h>
+
+#include "../utils/utils.h"
 
 int main() {
     printf("Testing EMMS Parallel Simulator...\n");
@@ -19,7 +22,8 @@ int main() {
     print_tree(qc->root, 0);
 
     printf("\nComputing statevector...\n");
-    double complex *sv = calloc(1 << 2, sizeof(double complex));
+    double complex *sv = calloc_custom(1 << 2, sizeof(double complex));
+    assert(sv != NULL);
     sv[0] = 1;
     emms_compute_statevector(qc, sv, 1 << 2);
 

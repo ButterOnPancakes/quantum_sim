@@ -7,6 +7,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "../utils/utils.h"
+
 // Matrix Operations for Leaves
 #define MAT_IDX(r, c, dim) ((r) * (dim) + (c))
 
@@ -26,7 +28,8 @@ Node *calc_product(Node *left, Node *right) {
     assert(left->dim == right->dim);
     uint64_t dim = left->dim;
     
-    double complex *new_mat = calloc(dim * dim, sizeof(double complex));
+    double complex *new_mat = calloc_custom(dim * dim, sizeof(double complex));
+    assert(new_mat != NULL);
     
     for (uint64_t i = 0; i < dim; i++) {
         for (uint64_t k = 0; k < dim; k++) {
@@ -190,12 +193,16 @@ Node *factorise_tensor(Node *circuit) {
             free_node(left, true);
             free_node(right, true);
             circuit->is_zero = true;
+            circuit->data.operation.left_child = NULL;
+            circuit->data.operation.right_child = NULL;
             return circuit;
         }
         if(right->is_zero || is_zero(right)) {
             free_node(left, true);
             free_node(right, true);
             circuit->is_zero = true;
+            circuit->data.operation.left_child = NULL;
+            circuit->data.operation.right_child = NULL;
             return circuit;
         }
         if(left->is_identity || is_identity(left)) {
@@ -282,18 +289,58 @@ Node *distrib_sum(Node *circuit) {
     return circuit;
 }
 
+Node *factorise_sum(Node *circuit) {
+    if (circuit == NULL || circuit->gt == LEAF || circuit->is_identity || circuit->is_zero) return circuit;
+
+    Node *left = circuit->data.operation.left_child;
+    Node *right = circuit->data.operation.right_child;
+
+    if (circuit->gt == OP_SUM && left->gt == OP_TENSOR && right->gt == OP_TENSOR) {
+        Node *A = left->data.operation.left_child;
+        Node *B = left->data.operation.right_child;
+        Node *C = right->data.operation.left_child;
+        Node *D = right->data.operation.right_child;
+
+        // Case: (A ⊗ B) + (A ⊗ D) -> A ⊗ (B + D)
+        if (nodes_equal(A, C)) {
+            Node *new_sum = create_sum(B, D);
+            Node *new_tensor = create_tensor(copy_node(A), new_sum);
+            
+            // Cleanup: free old SUM node and TENSOR nodes, but keep children that were reused or copied
+            free_node(left, false); 
+            free_node(right, false);
+            free_node(circuit, false);
+            
+            return factorise_sum(new_tensor);
+        }
+        // Case: (A ⊗ B) + (C ⊗ B) -> (A + C) ⊗ B
+        if (nodes_equal(B, D)) {
+            Node *new_sum = create_sum(A, C);
+            Node *new_tensor = create_tensor(new_sum, copy_node(B));
+
+            free_node(left, false);
+            free_node(right, false);
+            free_node(circuit, false);
+
+            return factorise_sum(new_tensor);
+        }
+    }
+
+    circuit->data.operation.left_child = factorise_sum(left);
+    circuit->data.operation.right_child = factorise_sum(right);
+
+    return circuit;
+}
+
 Node *full_optimize(Node *circuit) {
     if (circuit == NULL) return NULL;
 
     Node *current = circuit;
-    for(int i = 0; i < 1; i++) {
-        // 2. Algebraic simplifications
-        //circuit = distrib_sum(current);
+    for(int i = 0; i < 5; i++) { // Increased iterations to allow propagation of simplifications
         current = factorise_tensor(current);
+        current = factorise_sum(current);
         current = product_fusion(current);
         current = sum_fusion(current);
-        
-        // 3. Cleanup
         current = simplify_nodes(current);
     }
     

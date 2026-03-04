@@ -8,4 +8,7 @@
 
 double now_seconds();
 
+void *malloc_custom(size_t memorySize);
+void *calloc_custom(size_t elementCount, size_t elementSize);
+
 #endif

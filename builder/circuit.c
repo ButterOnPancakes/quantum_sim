@@ -6,6 +6,8 @@
 #include "emms.h"
 #include "operations.h"
 
+#include "../utils/utils.h"
+
 Node *create_identity_gate() { return create_1q_leaf(1, 0, 0, 1); }
 Node *create_x_gate() { return create_1q_leaf(0, 1, 1, 0); }
 Node *create_y_gate() { return create_1q_leaf(0, -I, I, 0); }
@@ -59,7 +61,8 @@ Node *create_full_tensor_layer(Node **nodes, int nb_tensor) {
 }
 
 QuantumCircuit *circuit_create(int nb_qbits) {
-    QuantumCircuit *qc = malloc(sizeof(QuantumCircuit));
+    QuantumCircuit *qc = malloc_custom(sizeof(QuantumCircuit));
+    assert(qc != NULL);
     qc->nb_qbits = nb_qbits;
     qc->root = create_identity_tree(nb_qbits);
     return qc;
@@ -100,8 +103,9 @@ Node *create_p01_gate() { return create_1q_leaf(0, 1, 0, 0); }
 Node *create_p10_gate() { return create_1q_leaf(0, 0, 1, 0); }
 void circuit_add_cnot_gate(QuantumCircuit *qc, int control, int target) {
     int n = qc->nb_qbits;
-    Node **nodes_term0 = malloc(n * sizeof(Node*));
-    Node **nodes_term1 = malloc(n * sizeof(Node*));
+    Node **nodes_term0 = malloc_custom(n * sizeof(Node*));
+    Node **nodes_term1 = malloc_custom(n * sizeof(Node*));
+    assert(nodes_term0 != NULL && nodes_term1 != NULL);
 
     for (int i = 0; i < n; i++) {
         if (i == control) {
@@ -128,8 +132,9 @@ void circuit_add_cnot_gate(QuantumCircuit *qc, int control, int target) {
 }
 void circuit_add_cz_gate(QuantumCircuit *qc, int control, int target) {
     int n = qc->nb_qbits;
-    Node **nodes_term0 = malloc(n * sizeof(Node*));
-    Node **nodes_term1 = malloc(n * sizeof(Node*));
+    Node **nodes_term0 = malloc_custom(n * sizeof(Node*));
+    Node **nodes_term1 = malloc_custom(n * sizeof(Node*));
+    assert(nodes_term0 != NULL && nodes_term1 != NULL);
 
     for (int i = 0; i < n; i++) {
         if (i == control) {
@@ -156,8 +161,9 @@ void circuit_add_cz_gate(QuantumCircuit *qc, int control, int target) {
 }
 void circuit_add_cphase_gate(QuantumCircuit *qc, int control, int target, double theta) {
     int n = qc->nb_qbits;
-    Node **nodes_term0 = malloc(n * sizeof(Node*));
-    Node **nodes_term1 = malloc(n * sizeof(Node*));
+    Node **nodes_term0 = malloc_custom(n * sizeof(Node*));
+    Node **nodes_term1 = malloc_custom(n * sizeof(Node*));
+    assert(nodes_term0 != NULL && nodes_term1 != NULL);
 
     for (int i = 0; i < n; i++) {
         if (i == control) {
@@ -165,7 +171,7 @@ void circuit_add_cphase_gate(QuantumCircuit *qc, int control, int target, double
             nodes_term1[i] = create_p1_gate();
         } else if (i == target) {
             nodes_term0[i] = create_identity_gate();
-            nodes_term1[i] = create_1q_leaf(cos(theta), -I*sin(theta), -I*sin(theta), cos(theta));
+            nodes_term1[i] = create_1q_leaf(1, 0, 0, cexp(I * theta));
         } else {
             nodes_term0[i] = create_identity_gate();
             nodes_term1[i] = create_identity_gate();
@@ -185,10 +191,14 @@ void circuit_add_cphase_gate(QuantumCircuit *qc, int control, int target, double
 void circuit_add_swap_gate(QuantumCircuit *qc, int q1, int q2) {
     int n = qc->nb_qbits;
     
-    Node **term00 = malloc(n * sizeof(Node*)); // |0><0| ⊗ |0><0|
-    Node **term11 = malloc(n * sizeof(Node*)); // |1><1| ⊗ |1><1|
-    Node **term01 = malloc(n * sizeof(Node*)); // |0><1| ⊗ |1><0|
-    Node **term10 = malloc(n * sizeof(Node*)); // |1><0| ⊗ |0><1|
+    Node **term00 = malloc_custom(n * sizeof(Node*)); // |0><0| ⊗ |0><0|
+    Node **term11 = malloc_custom(n * sizeof(Node*)); // |1><1| ⊗ |1><1|
+    Node **term01 = malloc_custom(n * sizeof(Node*)); // |0><1| ⊗ |1><0|
+    Node **term10 = malloc_custom(n * sizeof(Node*)); // |1><0| ⊗ |0><1|
+    assert(term00 != NULL);
+    assert(term11 != NULL);
+    assert(term01 != NULL);
+    assert(term10 != NULL);
 
     for (int i = 0; i < n; i++) {
         if (i == q1) {

@@ -4,6 +4,9 @@
 #include <string.h>
 #include <complex.h>
 #include <assert.h>
+#include <time.h>
+
+#include "../utils/utils.h"
 
 /*
 Representation of a reshaped column vector : See proof for more details
@@ -16,13 +19,18 @@ typedef struct {
     uint64_t offset_factor;
 } Split;
 
-Split copy_split(Split split) {
+Split malloc_split(Split split) {
     Split s;
-    s.data_size = split.data_size;
+    s.data_size = split.vector_size;
     s.vector_size = split.vector_size;
-    s.offset_factor = split.offset_factor;
-    s.data = malloc(split.data_size * sizeof(double complex));
-    for(uint64_t i = 0; i < split.data_size; i++) s.data[i] = split.data[i];
+    s.offset_factor = 1;
+    s.data = malloc_custom(split.vector_size * sizeof(double complex));
+    assert(s.data != NULL);
+    return s;
+}
+Split copy_split(Split split) {
+    Split s = malloc_split(split);
+    for(uint64_t i = 0; i < split.vector_size; i++) s.data[i] = split.data[i * split.offset_factor];
     return s;
 }
 void free_split(Split split) {
@@ -43,11 +51,10 @@ void apply_leaf(Node *node, Split vector, Split output) {
         }
     }
 }
-
 void apply_sum(Node *node, Split input, Split output) {
     assert(node != NULL && node->gt == OP_SUM);
 
-    Split temp = copy_split(output);
+    Split temp = malloc_split(output);
 
     apply_node(node->data.operation.left_child, input, output);
     apply_node(node->data.operation.right_child, input, temp);
@@ -56,22 +63,20 @@ void apply_sum(Node *node, Split input, Split output) {
 
     free_split(temp);
 }
-
 void apply_product(Node *node, Split input, Split output) {
     assert(node != NULL && node->gt == OP_PRODUCT);
 
-    Split temp = copy_split(output);
+    Split temp = malloc_split(output);
 
     apply_node(node->data.operation.right_child, input, temp);
     apply_node(node->data.operation.left_child, temp, output);
 
     free_split(temp);
 }
-
 void apply_tensor(Node *node, Split input, Split output) {
     assert(node != NULL && node->gt == OP_TENSOR);
 
-    Split temp = copy_split(output);
+    Split temp = malloc_split(output);
     
     Node *A = node->data.operation.left_child;
     Node *B = node->data.operation.right_child;
@@ -138,6 +143,8 @@ void apply_node(Node *node, Split vector, Split output) {
 }
 
 void emms_compute_statevector(QuantumCircuit *circuit, double complex* vector, uint64_t dim) {
+    srand(time(NULL));
+    assert(vector != NULL);
     assert(dim == (uint64_t) (1 << circuit->nb_qbits));
     Split output = {
         .data_size = dim,
