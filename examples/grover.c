@@ -4,12 +4,15 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <assert.h>
 
-double run_grover(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*oracle)(int)) {
+double run_grover(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*oracle)(uint64_t)) {
     double start_time = now_seconds();
     apply_n_hadamard(qreg, start_qbit, nb_qbits);
 
-    uint64_t N = 1 << nb_qbits;
+    uint64_t N = 1ULL << nb_qbits;
     uint64_t iterations = (int)(M_PI / 4.0 * sqrt((double)N));
     
     //printf("Running Grover for %d qubits (%lu states)...\n", nb_qbits, N);
@@ -28,16 +31,20 @@ double run_grover(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*or
     return end_time - start_time;
 }
 
-int target = 10;
-bool oracle(int number) {
+uint64_t target = 10;
+bool oracle(uint64_t number) {
     //printf("Oracle called with input: %d\n", number);
     return number == target;
 }
 
 int main() {
+    srand(time(NULL));
     for(int nb_qbits = 1; nb_qbits <= 25; nb_qbits++) {
         QuantumRegister *qreg = qregister_create(nb_qbits);
         ClassicalRegister *creg = cregister_create(nb_qbits);
+
+        target = rand() % (1 << nb_qbits);
+        printf("Running Grover's algorithm for %d qubits with target %ld...\n", nb_qbits, target);
 
         run_grover(qreg, 0, nb_qbits, oracle);
 
@@ -47,9 +54,12 @@ int main() {
         }
         printf("\n");
 
-        printf("Measurement results: %ld\n", cregister_calc_number(creg));
+        uint64_t measured_number = cregister_calc_number(creg);
+        printf("Measurement results: %ld\n", measured_number);
         cregister_print(creg);
-        printf("Expected result: %d\n", target);
+        printf("Expected result: %ld\n", target);
+
+        assert(measured_number == target);
 
         qregister_free(qreg);
         cregister_free(creg);

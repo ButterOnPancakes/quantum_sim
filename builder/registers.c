@@ -1,5 +1,7 @@
 #include "registers.h"
 
+#include "../utils/utils.h"
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,8 +12,8 @@
 
 // ---- Classical Registers ----
 ClassicalRegister *cregister_create(int size) {
-    ClassicalRegister *creg = malloc(sizeof(ClassicalRegister));
-    creg->array = calloc(size, sizeof(bool));
+    ClassicalRegister *creg = malloc_custom(sizeof(ClassicalRegister));
+    creg->array = calloc_custom(size, sizeof(bool));
     creg->size = size;
     return creg;
 }
@@ -49,8 +51,8 @@ void cregister_print(ClassicalRegister *creg) {
 // ---- Quantum Registers ----
 QuantumRegister *qregister_create(int nb_qbits) {
     uint64_t dim = 1ULL << nb_qbits;
-    QuantumRegister *qreg = malloc(sizeof(QuantumRegister));
-    qreg->array = calloc(dim, sizeof(double complex));
+    QuantumRegister *qreg = malloc_custom(sizeof(QuantumRegister));
+    qreg->array = calloc_custom(dim, sizeof(double complex));
     assert(qreg->array != NULL);
     qreg->array[0] = 1.0;
     qreg->size = dim;
@@ -93,7 +95,7 @@ double qregister_calc_proba(QuantumRegister *qreg, int qbit, bool result) {
 }
 void qregister_normalise(QuantumRegister *qreg) {
     double norm = qregister_calc_norm(qreg);
-    if (norm < 1e-15) return;
+    if (norm < EPSILON) return;
     for(uint64_t i = 0; i < qreg->size; i++) {
         qreg->array[i] = qreg->array[i] / norm;
     }
@@ -112,7 +114,7 @@ void qregister_collapse(QuantumRegister *qreg, int qbit, bool result) {
 double qregister_measure(QuantumRegister *qreg, int qbit, ClassicalRegister *creg, int slot) {
     double proba0 = qregister_calc_proba(qreg, qbit, 0);
     double random = (double)rand() / (double)RAND_MAX;
-    bool result = random >= proba0;
+    bool result = random > proba0;
     qregister_collapse(qreg, qbit, result);
 
     if(creg != NULL) cregister_set(creg, slot, result);

@@ -9,8 +9,8 @@
 
 // 1-qbit gate, issu de opti_version
 void apply_hadamard(QuantumRegister *qreg, int qbit) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t bit = 1 << qbit; // Little Endian: bit 0 is the 2^0 position
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t bit = 1ULL << qbit; // Little Endian: bit 0 is the 2^0 position
     
     double inv_sqrt2 = sqrt(0.5);
 
@@ -28,8 +28,8 @@ void apply_hadamard(QuantumRegister *qreg, int qbit) {
     }
 }
 void apply_gate_x(QuantumRegister *qreg, int qbit) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t bit = 1 << qbit;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t bit = 1ULL << qbit;
     
     for (uint64_t i = 0; i < size; i += (bit << 1)) {
         for (uint64_t r = 0; r < bit; r++) {
@@ -42,8 +42,8 @@ void apply_gate_x(QuantumRegister *qreg, int qbit) {
     }
 }
 void apply_gate_y(QuantumRegister *qreg, int qbit) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t bit = 1 << qbit;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t bit = 1ULL << qbit;
     
     for (uint64_t i = 0; i < size; i += (bit << 1)) {
         for (uint64_t r = 0; r < bit; r++) {
@@ -57,8 +57,8 @@ void apply_gate_y(QuantumRegister *qreg, int qbit) {
     }
 }
 void apply_gate_z(QuantumRegister *qreg, int qbit) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t bit = 1 << qbit;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t bit = 1ULL << qbit;
     
     for (uint64_t i = 0; i < size; i += (bit << 1)) {
         for (uint64_t r = 0; r < bit; r++) {
@@ -67,8 +67,8 @@ void apply_gate_z(QuantumRegister *qreg, int qbit) {
     }
 }
 void apply_gate_phase(QuantumRegister *qreg, int qbit, double phase) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t bit = 1 << qbit;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t bit = 1ULL << qbit;
     double complex expo = cexp(I * phase);
     
     for (uint64_t i = 0; i < size; i += (bit << 1)) {
@@ -80,9 +80,9 @@ void apply_gate_phase(QuantumRegister *qreg, int qbit, double phase) {
 
 // 2-qbit gates, issu de opti_version
 void apply_cnot(QuantumRegister *qreg, int c, int t) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t c_bit = 1 << c;
-    uint64_t t_bit = 1 << t;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t c_bit = 1ULL << c;
+    uint64_t t_bit = 1ULL << t;
 
     // We only need to iterate through half the register (where control bit is 1)
     for (uint64_t i = 0; i < size; i++) {
@@ -96,9 +96,9 @@ void apply_cnot(QuantumRegister *qreg, int c, int t) {
     }
 }
 void apply_swap(QuantumRegister *qreg, int q0, int q1) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t b0 = 1 << q0;
-    uint64_t b1 = 1 << q1;
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t b0 = 1ULL << q0;
+    uint64_t b1 = 1ULL << q1;
 
     for (uint64_t i = 0; i < size; i++) {
         // Only swap if bits at q0 and q1 are different (01 or 10)
@@ -113,29 +113,28 @@ void apply_swap(QuantumRegister *qreg, int q0, int q1) {
 }
 
 // n-qbit gates
-void apply_oracle_phase(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*function)(int number)) {
+void apply_oracle_phase(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*function)(uint64_t number)) {
     uint64_t size = qreg->size;
-    uint64_t input_mask = (1 << nb_qbits) - 1;
+    uint64_t input_mask = (1ULL << nb_qbits) - 1;
 
     for (uint64_t i = 0; i < size; i++) {
-        int number = (int)((i >> start_qbit) & input_mask);
+        uint64_t number = (i >> start_qbit) & input_mask;
 
         if (function(number)) {
             qreg->array[i] = -qreg->array[i];
         }
     }
 }
-void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, int ancilla_qbit, bool (*function)(int number)) {
-    uint64_t size = 1 << qreg->nb_qbits;
-    uint64_t ancilla_bit = 1 << ancilla_qbit; // Little Endian
-    uint64_t input_mask = (1 << nb_qbits) - 1;
+void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, int ancilla_qbit, bool (*function)(uint64_t number)) {
+    uint64_t size = 1ULL << qreg->nb_qbits;
+    uint64_t ancilla_bit = 1ULL << ancilla_qbit; // Little Endian
+    uint64_t input_mask = (1ULL << nb_qbits) - 1;
 
-    //#pragma omp parallel for
     for (uint64_t i = 0; i < size; i++) {
         // We only process the pair when the ancilla bit is 0
         // This ensures we only perform the swap once per pair
         if (!(i & ancilla_bit)) {
-            int number = (int)((i >> start_qbit) & input_mask);
+            uint64_t number = (i >> start_qbit) & input_mask;
 
             if (function(number)) {
                 uint64_t i0 = i;
@@ -150,17 +149,13 @@ void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, i
 }
 void apply_diffusion(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     uint64_t total_size = qreg->size;
-    uint64_t sub_size = 1 << nb_qbits;
+    uint64_t sub_size = 1ULL << nb_qbits;
     
     // Equivalent to total_size / sub_size
     uint64_t num_blocks = total_size >> nb_qbits; 
 
     for (uint64_t b = 0; b < num_blocks; b++) {
-        // Construct the base index by spreading bits of 'b'
-        uint64_t low_bits = b & ((1 << start_qbit) - 1);
-        uint64_t high_bits = (b >> start_qbit) << (start_qbit + nb_qbits);
-        uint64_t base_idx = high_bits | low_bits;
-
+        uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits);
         double complex sum_amps = 0;
         
         // Pass 1: Local Mean
@@ -196,17 +191,14 @@ uint64_t reverse_window_bits(uint64_t val, int bits) {
 }
 void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     uint64_t total_size = qreg->size;
-    uint64_t sub_size = 1 << nb_qbits;
+    uint64_t sub_size = 1ULL << nb_qbits;
     uint64_t num_blocks = total_size >> nb_qbits;
 
-    double complex *buffer = malloc(sub_size * sizeof(double complex));
+    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
     if (!buffer) return;
 
     for (uint64_t b = 0; b < num_blocks; b++) {
-        // Construct the base index by spreading bits of 'b' around the nb_qbits window
-        uint64_t low_bits = b & ((1 << start_qbit) - 1);
-        uint64_t high_bits = (b >> start_qbit) << (start_qbit + nb_qbits);
-        uint64_t base_idx = high_bits | low_bits;
+        uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits);
 
         // 1. Extract amplitudes
         for (uint64_t i = 0; i < sub_size; i++) {
@@ -227,16 +219,14 @@ void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
 
 void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     uint64_t total_size = qreg->size;
-    uint64_t sub_size = (uint64_t)1 << nb_qbits;
+    uint64_t sub_size = (uint64_t)1ULL << nb_qbits;
     uint64_t num_blocks = total_size >> nb_qbits;
 
-    double complex *buffer = malloc(sub_size * sizeof(double complex));
+    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
     if (!buffer) return;
 
     for (uint64_t b = 0; b < num_blocks; b++) {
-        uint64_t low_bits = b & (((uint64_t)1 << start_qbit) - 1);
-        uint64_t high_bits = (b >> start_qbit) << (start_qbit + nb_qbits);
-        uint64_t base_idx = high_bits | low_bits;
+        uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits);
 
         for (uint64_t i = 0; i < sub_size; i++) {
             buffer[i] = qreg->array[base_idx | (i << start_qbit)];

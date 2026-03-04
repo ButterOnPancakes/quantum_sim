@@ -12,9 +12,10 @@ static uint64_t reverse_bits(uint64_t x, int n) {
     return res;
 }
 
-void fft_base(double complex *x, uint64_t n, bool inverse) {
+void compute_fft(double complex *x, uint64_t n, bool inverse) {
+    // Cooley-Tukey FFT algorithm
     int levels = 0;
-    while (((uint64_t)1 << levels) < n) levels++;
+    while (((uint64_t)1ULL << levels) < n) levels++;
 
     for (uint64_t i = 0; i < n; i++) {
         uint64_t j = reverse_bits(i, levels);
@@ -26,7 +27,7 @@ void fft_base(double complex *x, uint64_t n, bool inverse) {
     }
 
     for (int s = 1; s <= levels; s++) {
-        uint64_t m = (uint64_t)1 << s;
+        uint64_t m = (uint64_t)1ULL << s;
         uint64_t m2 = m >> 1;
         double complex w_m = cexp((inverse ? 2.0 : -2.0) * M_PI * I / (double)m);
         for (uint64_t k = 0; k < n; k += m) {
@@ -42,17 +43,8 @@ void fft_base(double complex *x, uint64_t n, bool inverse) {
     }
 }
 
-void fft(double complex *x, uint64_t n) {
-    fft_base(x, n, false);
-}
-
-void ifft(double complex *x, uint64_t n) {
-    fft_base(x, n, true);
-    for (uint64_t i = 0; i < n; i++) x[i] /= (double)n;
-}
-
 void qft_base(double complex *x, uint64_t n, bool inverse) {
-    fft_base(x, n, !inverse);
+    compute_fft(x, n, !inverse);
     
     double complex scale = 1.0 / sqrt((double)n);
     for (uint64_t i = 0; i < n; i++) x[i] *= scale;

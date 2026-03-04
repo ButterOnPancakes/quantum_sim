@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 double qft_execution(int n) {
     QuantumRegister *qreg = qregister_create(n);
@@ -17,6 +18,7 @@ double qft_execution(int n) {
 }
 
 int main(int argc, char *argv[]) {
+    srand(time(NULL));
     int nb_qbits = 10;
     if(argc >= 2) {
        nb_qbits = atoi(argv[1]);
