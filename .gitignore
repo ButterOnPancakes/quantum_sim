@@ -3,3 +3,4 @@ vgcore.*
 .venv
 bin
 logs/*
+heaptrack*
