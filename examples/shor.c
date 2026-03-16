@@ -23,8 +23,8 @@ uint64_t power(uint64_t base, uint64_t exp, uint64_t mod) {
     uint64_t res = 1;
     base %= mod;
     while (exp > 0) {
-        if (exp % 2 == 1) res = (unsigned __int128)res * base % mod;
-        base = (unsigned __int128)base * base % mod;
+        if (exp % 2 == 1) res = (uint64_t)res * base % mod;
+        base = (uint64_t)base * base % mod;
         exp /= 2;
     }
     return res;
@@ -54,7 +54,7 @@ void apply_mod_exp(QuantumRegister *qreg, int m, int a, int N) {
         // and we compute |x> |1 * a^x mod N>.
         // Here we handle the general case for any |y> < N.
         if (y < (uint64_t)N) {
-            uint64_t new_y = ((unsigned __int128)y * power(a, x, N)) % N;
+            uint64_t new_y = ((uint64_t)y * power(a, x, N)) % N;
             uint64_t new_idx = (new_y << m) | x;
             new_array[new_idx] += qreg->array[i];
         } else {
@@ -73,7 +73,7 @@ void apply_mod_exp(QuantumRegister *qreg, int m, int a, int N) {
  * @brief Find the period r from the measured value y and the modulus M = 2^m.
  * Uses the continued fraction expansion of y/M to find candidates for r.
  */
-uint64_t find_period_from_measurement(uint64_t y, uint64_t M, int N, int a) {
+uint64_t find_period_from_measurement(uint64_t y, uint64_t M, uint64_t N, int a) {
     if (y == 0) return 0;
     
     uint64_t p = y, q = M;
@@ -108,14 +108,14 @@ uint64_t find_period_from_measurement(uint64_t y, uint64_t M, int N, int a) {
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-    int N = 15;
+    uint64_t N = 15;
     if (argc >= 2) {
         N = atoi(argv[1]);
     }
 
     if (N < 2) return 0;
     if (N % 2 == 0) {
-        printf("N=%d is even. A factor is 2.\n", N);
+        printf("N=%lud is even. A factor is 2.\n", N);
         return 0;
     }
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     } while (gcd(a, N) != 1);
 
     printf("--- Shor's Algorithm Implementation ---\n");
-    printf("Target N = %d, chosen base a = %d\n", N, a);
+    printf("Target N = %lud, chosen base a = %d\n", N, a);
 
     // Number of qubits for register 1 (m) and register 2 (n)
     // We need N^2 <= 2^m < 2N^2
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     
     uint64_t y = cregister_calc_number(creg);
     uint64_t M = 1ULL << m;
-    printf("Measured value y = %lld (M = 2^m = %lld)\n", y, M);
+    printf("Measured value y = %lud (M = 2^m = %lud)\n", y, M);
     printf("Phase estimate y/M = %f\n", (double)y / M);
 
     // Step 5: Post-processing to find factors
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     if (r == 0) {
         printf("Failed to find period r. The measurement did not yield enough information.\n");
     } else {
-        printf("Found period r = %lld\n", r);
+        printf("Found period r = %lud\n", r);
         if (r % 2 != 0) {
             printf("Period r is odd. Cannot proceed with this 'a'.\n");
         } else {
@@ -188,9 +188,9 @@ int main(int argc, char *argv[]) {
                 uint64_t f1 = gcd(val - 1, N);
                 uint64_t f2 = gcd(val + 1, N);
                 if (f1 > 1 && f1 < N) {
-                    printf("SUCCESS: Found factors %lld and %lld\n", f1, N / f1);
+                    printf("SUCCESS: Found factors %lud and %lud\n", f1, N / f1);
                 } else if (f2 > 1 && f2 < N) {
-                    printf("SUCCESS: Found factors %lld and %lld\n", f2, N / f2);
+                    printf("SUCCESS: Found factors %lud and %lud\n", f2, N / f2);
                 } else {
                     printf("Failed to find non-trivial factors.\n");
                 }
