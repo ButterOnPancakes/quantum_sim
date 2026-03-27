@@ -9,20 +9,23 @@
 #define EPSILON    1e-9
 
 double now_seconds();
+
+int gcd(int a, int b);
+int lcm(int a, int b);
+
+void bezout_coef(int a, int b, int *u, int *v);
+int get_inverse(int a, int N);
+
+int fexp(int x, int n);
+int fexp_mod(int x, int n, int N);
+
 void *malloc_custom(size_t size);
 void *calloc_custom(size_t amount, size_t element_size);
+void free_custom(void *ptr);
 
 /**
  * Robust bit spreading for a contiguous window of qubits.
  * Inserts 'window_val' (nb bits) into 'base_val' at position 'start'.
  */
-static inline uint64_t spread_bits(uint64_t base_val, uint64_t window_val, int start, int nb) {
-    if (start == 0) return (base_val << nb) | window_val;
-    
-    uint64_t low_mask = (1ULL << start) - 1;
-    uint64_t low_bits = base_val & low_mask;
-    uint64_t high_bits = (base_val >> start) << (start + nb);
-    return high_bits | low_bits | (window_val << start);
-}
-
+uint64_t spread_bits(uint64_t base_val, uint64_t window_val, int start, int nb);
 #endif

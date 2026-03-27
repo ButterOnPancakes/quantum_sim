@@ -24,7 +24,7 @@ Logger *logger_create(const char* filename) {
 }
 void logger_free(Logger *logger) {
     fclose(logger->log_file);
-    free(logger);
+    free_custom(logger);
 }
 
 void logger_message(Logger *logger, const char* tag, const char* message) {

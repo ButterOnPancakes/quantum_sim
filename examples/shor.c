@@ -1,204 +1,141 @@
 #include "../builder/registers.h"
 #include "../simulator/operations.h"
+
 #include "../utils/utils.h"
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+#include <stdbool.h>
 #include <math.h>
-#include <complex.h>
-#include <stdint.h>
+#include <stdlib.h>
 
-// Standard Euclidean algorithm for GCD
-uint64_t gcd(uint64_t a, uint64_t b) {
-    while (b) {
-        a %= b;
-        uint64_t tmp = a; a = b; b = tmp;
+#define ITERATIONS 5
+
+int phase_estimation(QuantumRegister *eigenvector, int precision, int a, int N) {
+    QuantumRegister *fst_reg = qregister_create(precision); // precision of r
+
+    QuantumRegister *qreg = qregister_fuse(fst_reg, eigenvector); qregister_free(fst_reg);
+    ClassicalRegister *creg = cregister_create(precision);
+
+    apply_n_hadamard(qreg, 0, precision);
+    printf("START PROD\n");
+    for(int i = 0; i < precision; i++) {
+        apply_controlled_prod_exp(qreg, precision-1-i, precision, eigenvector->nb_qbits, a, N, 1 << i);
     }
-    return a;
+    printf("START IQFT\n");
+    apply_iqft(qreg, 0, precision);
+
+    for(int i = 0; i < precision; i++) {
+        qregister_measure(qreg, i, creg, i);
+    }
+
+    int res = cregister_calc_number(creg);
+    qregister_free(qreg);
+    cregister_free(creg);
+
+    return res;
 }
 
-// Modular exponentiation: (base^exp) % mod
-uint64_t power(uint64_t base, uint64_t exp, uint64_t mod) {
-    uint64_t res = 1;
-    base %= mod;
-    while (exp > 0) {
-        if (exp % 2 == 1) res = (uint64_t)res * base % mod;
-        base = (uint64_t)base * base % mod;
-        exp /= 2;
+void continued_fraction(double frac, int *quotients, int i, int n) {
+    if(i <= n) {
+        quotients[i] = floor(frac);
+        double rest = frac - quotients[i];
+        continued_fraction(1/rest, quotients, i+1, n);
+    }
+}
+
+// lcm is associative
+int lcm_array(int *array, int n) {
+    int res = 1;
+    for(int i = 0; i < n; i++) {
+        res = lcm(res, array[i]);
     }
     return res;
 }
 
-/**
- * @brief Applies the modular exponentiation transformation.
- * |x>|y> -> |x>(y * a^x mod N)
- * This implementation is simplified for the simulator by modifying the state vector directly.
- */
-void apply_mod_exp(QuantumRegister *qreg, int m, int a, int N) {
-    uint64_t size = qreg->size;
-    double complex *new_array = calloc(size, sizeof(double complex));
-    if (!new_array) {
-        fprintf(stderr, "Memory allocation failed in apply_mod_exp\n");
-        return;
-    }
-    uint64_t m_mask = (1ULL << m) - 1;
+int order_finding(int a, int N) {
+    int n = ceil(log2(N));
+    int precision = 2 * n;
 
-    for (uint64_t i = 0; i < size; i++) {
-        if (cabs(qreg->array[i]) < 1e-18) continue;
+    printf("%d = %d (precision) + %d (U eigenvector size) qubits used\n", n + precision, precision, n);
+    int *obtained_c = malloc_custom(ITERATIONS * sizeof(int));
 
-        uint64_t x = i & m_mask;
-        uint64_t y = i >> m;
+    printf("STARTING ORDER FINDING\n");
 
-        // Shor's algorithm usually initializes the second register to |1>
-        // and we compute |x> |1 * a^x mod N>.
-        // Here we handle the general case for any |y> < N.
-        if (y < (uint64_t)N) {
-            uint64_t new_y = ((uint64_t)y * power(a, x, N)) % N;
-            uint64_t new_idx = (new_y << m) | x;
-            new_array[new_idx] += qreg->array[i];
-        } else {
-            // States with y >= N are left unchanged
-            new_array[i] += qreg->array[i];
+    for(int k = 0; k < ITERATIONS; k++) {
+        printf("PHASE ESTIMATION\n");
+        // 1 is the average of U eigenvectors, thus each eigenvalue have 1/r of being measured
+        QuantumRegister *eigenvector = qregister_create(n);
+        eigenvector->array[0] = 0; eigenvector->array[1] = 1;
+
+        int output = phase_estimation(eigenvector, precision, a, N);
+        qregister_free(eigenvector);
+
+        double frac = (double) output / pow(2, 2*n);
+        printf("OUTPUT : %d / FRACTION OBTAINED : %f\n", output, frac);
+
+        int *quotients = malloc_custom(n * sizeof(int));
+        continued_fraction(frac, quotients, 0, n);
+
+        int pi_2 = 0, pi_1 = 1;
+        int qi_2 = 1, qi_1 = 0;
+        int i = 0;
+        while(qi_1 < N || fabs(frac - pi_2/(double) qi_2) > (double) (2 * qi_2 * qi_2)) {
+            int pi = quotients[i] * pi_1 + pi_2;
+            int qi = quotients[i] * qi_1 + qi_2;
+
+            pi_2 = pi_1; pi_1 = pi;
+            qi_2 = qi_1; qi_1 = qi;
+
+            i++;
         }
+        free_custom(quotients);
+
+        // end of the loop, qi_1 >= N et pi_2, qi_2 verifient legendre, b/c = j/r = frac
+        int c = qi_2;
+
+        obtained_c[k] = c;
+        printf("C OBTAINED : %d\n", c);
     }
 
-    for (uint64_t i = 0; i < size; i++) {
-        qreg->array[i] = new_array[i];
-    }
-    free(new_array);
-}
+    int res = lcm_array(obtained_c, ITERATIONS);
+    free_custom(obtained_c);
 
-/**
- * @brief Find the period r from the measured value y and the modulus M = 2^m.
- * Uses the continued fraction expansion of y/M to find candidates for r.
- */
-uint64_t find_period_from_measurement(uint64_t y, uint64_t M, uint64_t N, int a) {
-    if (y == 0) return 0;
-    
-    uint64_t p = y, q = M;
-    uint64_t a_cf[100];
-    int n_cf = 0;
-    
-    // Compute continued fraction coefficients
-    while (q != 0 && n_cf < 100) {
-        a_cf[n_cf++] = p / q;
-        uint64_t tmp = p % q; p = q; q = tmp;
-    }
-
-    // Check convergents h/k
-    for (int i = 0; i < n_cf; i++) {
-        uint64_t h_prev = 1, k_prev = 0;
-        uint64_t h = a_cf[0], k = 1;
-        for (int j = 1; j <= i; j++) {
-            uint64_t h_next = a_cf[j] * h + h_prev;
-            uint64_t k_next = a_cf[j] * k + k_prev;
-            h_prev = h; k_prev = k; h = h_next; k = k_next;
-        }
-        
-        // Candidate r is the denominator k
-        if (k > 1 && k < N) {
-            if (power(a, k, N) == 1) return k;
-        }
-    }
-    
-    // Also check small multiples of the denominator if N is small
-    return 0;
+    return res;
 }
 
 int main(int argc, char *argv[]) {
-    srand(time(NULL));
-    uint64_t N = 15;
-    if (argc >= 2) {
-        N = atoi(argv[1]);
-    }
+    if(argc < 2) {fprintf(stderr, "./shor <N>"); return 1;}
+    int N = atoi(argv[1]);
 
-    if (N < 2) return 0;
-    if (N % 2 == 0) {
-        printf("N=%lud is even. A factor is 2.\n", N);
+    printf("\n\n---------------- STARTING SHOR WITH N = %d ----------------\n\n", N);
+
+    if(N%2==0) {
+        printf("%d = %d * %d\n", N, N/2, 2);
         return 0;
     }
 
-    // Step 0: Choose a random 'a' coprime to N
-    int a;
-    do {
-        a = 2 + rand() % (N - 2);
-    } while (gcd(a, N) != 1);
-
-    printf("--- Shor's Algorithm Implementation ---\n");
-    printf("Target N = %lud, chosen base a = %d\n", N, a);
-
-    // Number of qubits for register 1 (m) and register 2 (n)
-    // We need N^2 <= 2^m < 2N^2
-    int n = (int)ceil(log2(N));
-    int m = 2 * n; 
-    int total_qbits = m + n;
-
-    if (total_qbits > 20) {
-        printf("Warning: Total qubits (%d) might exceed simulator memory limits.\n", total_qbits);
-    }
-
-    printf("Using %d qubits: Register 1 (m=%d), Register 2 (n=%d)\n", total_qbits, m, n);
-
-    // Create Quantum Register
-    QuantumRegister *qreg = qregister_create(total_qbits);
-
-    // Initial state: |0>|1>
-    // Register 1 is |0>, Register 2 is |1> (qubits m to m+n-1)
-    apply_gate_x(qreg, m); 
-
-    // Step 1: Create superposition in Register 1
-    printf("Applying Hadamard gates to Register 1...\n");
-    apply_n_hadamard(qreg, 0, m);
-
-    // Step 2: Modular Exponentiation: |x>|1> -> |x>|a^x mod N>
-    printf("Applying modular exponentiation (a^x mod N)...\n");
-    apply_mod_exp(qreg, m, a, N);
-
-    // Step 3: Apply Inverse QFT to Register 1
-    printf("Applying Inverse QFT to Register 1...\n");
-    apply_iqft(qreg, 0, m);
-
-    // Step 4: Measure Register 1
-    printf("Measuring Register 1...\n");
-    ClassicalRegister *creg = cregister_create(m);
-    for (int i = 0; i < m; i++) {
-        qregister_measure(qreg, i, creg, i);
-    }
-    
-    uint64_t y = cregister_calc_number(creg);
-    uint64_t M = 1ULL << m;
-    printf("Measured value y = %lud (M = 2^m = %lud)\n", y, M);
-    printf("Phase estimate y/M = %f\n", (double)y / M);
-
-    // Step 5: Post-processing to find factors
-    uint64_t r = find_period_from_measurement(y, M, N, a);
-
-    if (r == 0) {
-        printf("Failed to find period r. The measurement did not yield enough information.\n");
-    } else {
-        printf("Found period r = %lud\n", r);
-        if (r % 2 != 0) {
-            printf("Period r is odd. Cannot proceed with this 'a'.\n");
-        } else {
-            uint64_t val = power(a, r / 2, N);
-            if (val == N - 1) {
-                printf("a^(r/2) is congruent to -1 (mod N). Trivial factors found.\n");
-            } else {
-                uint64_t f1 = gcd(val - 1, N);
-                uint64_t f2 = gcd(val + 1, N);
-                if (f1 > 1 && f1 < N) {
-                    printf("SUCCESS: Found factors %lud and %lud\n", f1, N / f1);
-                } else if (f2 > 1 && f2 < N) {
-                    printf("SUCCESS: Found factors %lud and %lud\n", f2, N / f2);
-                } else {
-                    printf("Failed to find non-trivial factors.\n");
-                }
-            }
+    while(true) { // Will exit with returns
+        int a = rand()%(N-1)+1;
+        if(gcd(a, N) != 1) {
+            printf("%d = %d * %d\n", N, gcd(a, N), N/gcd(a, N));
+            return 0;
         }
+
+        //a is now a coprime with N
+        int r = order_finding(a, N);
+        if(r%2==1) {
+            printf("R IS PAIR, RESTARTING\n\n");
+            continue;
+        }
+
+        int g = gcd(fexp(a, r/2) + 1, N);
+        if(g != 1 && g != N) {
+            printf("%d = %d * %d\n", N, g, N/g);
+            return 0;
+        }
+
+        printf("TRIVIAL G FOUND, RESTARTING\n\n");
     }
 
-    qregister_free(qreg);
-    cregister_free(creg);
-    return 0;
+    return 1;
 }

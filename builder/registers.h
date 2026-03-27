@@ -34,4 +34,4 @@ double qregister_calc_norm(QuantumRegister *qreg);
 double qregister_calc_proba(QuantumRegister *qreg, int qbit, bool result);
 void qregister_normalise(QuantumRegister *qreg);
 double qregister_measure(QuantumRegister *qreg, int qbit, ClassicalRegister *creg, int slot);
-//bool qregister_split_qbits
+QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2);

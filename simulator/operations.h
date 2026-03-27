@@ -102,4 +102,10 @@ void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits);
  */
 void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits);
 
-#endif // OPERATIONS_H
+/**
+ * @brief Applies the Unitary Transform verifying U|k> = U|ak[N]>
+ * WARNING : a must be a coprime of N, eq it exists (u,v), au + Nv = 1 (else it will do UNDEFINED BEHAVIOR)
+ */
+void apply_prod(QuantumRegister *qreg, int start_qbit, int nb_qbits, int a, int N);
+void apply_controlled_prod_exp(QuantumRegister *qreg, int c, int start_qbit, int nb_qbits, int a, int N, int k);
+#endif

@@ -3,9 +3,11 @@
 #include "../utils/utils.h"
 #include "../utils/fft.h"
 
+#include <stdio.h>
 #include <complex.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 // 1-qbit gate, issu de opti_version
 void apply_hadamard(QuantumRegister *qreg, int qbit) {
@@ -179,16 +181,6 @@ void apply_n_hadamard(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     }
 }
 
-// Helper to reverse bits within a specific window for Little Endian
-uint64_t reverse_window_bits(uint64_t val, int bits) {
-    uint64_t res = 0;
-    for (int i = 0; i < bits; i++) {
-        if (val & (1ULL << i)) {
-            res |= (1ULL << (bits - 1 - i));
-        }
-    }
-    return res;
-}
 void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     uint64_t total_size = qreg->size;
     uint64_t sub_size = 1ULL << nb_qbits;
@@ -214,9 +206,8 @@ void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
         }
     }
 
-    free(buffer);
+    free_custom(buffer);
 }
-
 void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     uint64_t total_size = qreg->size;
     uint64_t sub_size = (uint64_t)1ULL << nb_qbits;
@@ -228,16 +219,76 @@ void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     for (uint64_t b = 0; b < num_blocks; b++) {
         uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits);
 
+        // 1. Extract amplitudes
         for (uint64_t i = 0; i < sub_size; i++) {
             buffer[i] = qreg->array[base_idx | (i << start_qbit)];
         }
 
+        // 2. Perform IQFT
         qft_base(buffer, sub_size, true);
 
+        // 3. Re-insert amplitudes
         for (uint64_t i = 0; i < sub_size; i++) {
             qreg->array[base_idx | (i << start_qbit)] = buffer[i];
         }
     }
 
-    free(buffer);
+    free_custom(buffer);
+}
+void apply_prod(QuantumRegister *qreg, int start_qbit, int nb_qbits, int a, int N) {
+    uint64_t total_size = qreg->size;
+    uint64_t sub_size = 1ULL << nb_qbits;
+    uint64_t num_blocks = total_size >> nb_qbits;
+
+    int v = get_inverse(a, N);
+    
+    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    if (!buffer) return;
+
+    for (uint64_t b = 0; b < num_blocks; b++) {
+        uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits); // Give (b(n-nb)....b(s+1))(0.....0)(bs...b1)
+
+        // Extract amplitudes
+        for(uint64_t i = 0; i < sub_size; i++) {
+            buffer[i] = qreg->array[base_idx | (i << start_qbit)];
+        }
+
+        // Re-insert amplitudes at correct positions (y[i] = x[iv%N])
+        for(uint64_t i = 0; i < sub_size; i++) {
+            qreg->array[base_idx | (i << start_qbit)] = buffer[(v * i)%N];
+        }
+    }
+
+    free_custom(buffer);
+}
+void apply_controlled_prod_exp(QuantumRegister *qreg, int c, int start_qbit, int nb_qbits, int a, int N, int k) {
+    assert((start_qbit + nb_qbits <= c && c + nb_qbits < qreg->nb_qbits) || c < start_qbit);
+    uint64_t total_size = qreg->size;
+    uint64_t control = 1ULL << c;
+    if(start_qbit + nb_qbits <= c) control = control << nb_qbits;
+    uint64_t sub_size = 1ULL << nb_qbits;
+    uint64_t num_blocks = total_size >> nb_qbits;
+
+    uint64_t u = get_inverse(a, N);
+    uint64_t v = fexp_mod(u, k, N);
+    
+    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    if (!buffer) return;
+
+    for (uint64_t b = 0; b < num_blocks; b++) {
+        uint64_t base_idx = spread_bits(b, 0, start_qbit, nb_qbits); // Give (b(n-nb)....b(s+1))(0.....0)(bs...b1)
+        if(!(base_idx & control)) continue;
+
+        // Extract amplitudes
+        for(uint64_t i = 0; i < sub_size; i++) {
+            buffer[i] = qreg->array[base_idx | (i << start_qbit)];
+        }
+
+        // Re-insert amplitudes at correct positions (y[i] = x[iv%N])
+        for(uint64_t i = 0; i < sub_size; i++) {
+            qreg->array[base_idx | (i << start_qbit)] = buffer[(v * i)%N];
+        }
+    }
+
+    free_custom(buffer);
 }

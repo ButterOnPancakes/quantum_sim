@@ -19,8 +19,8 @@ ClassicalRegister *cregister_create(int size) {
 }
 void cregister_free(ClassicalRegister *creg) {
     assert(creg != NULL);
-    free(creg->array);
-    free(creg);
+    free_custom(creg->array);
+    free_custom(creg);
 }
 
 bool cregister_get(ClassicalRegister *creg, int slot) {
@@ -61,8 +61,8 @@ QuantumRegister *qregister_create(int nb_qbits) {
 }
 void qregister_free(QuantumRegister *qreg) {
     assert(qreg != NULL);
-    free(qreg->array);
-    free(qreg);
+    free_custom(qreg->array);
+    free_custom(qreg);
 }
 
 double complex qregister_get_amplitude(QuantumRegister *qreg, uint64_t index) {
@@ -119,4 +119,21 @@ double qregister_measure(QuantumRegister *qreg, int qbit, ClassicalRegister *cre
 
     if(creg != NULL) cregister_set(creg, slot, result);
     return result ? 1.0 - proba0 : proba0;
+}
+
+QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2) {
+    QuantumRegister* qregister = malloc_custom(sizeof(QuantumRegister));
+    qregister->nb_qbits = q1->nb_qbits + q2->nb_qbits;
+    qregister->size = 1ULL << qregister->nb_qbits;
+    qregister->array = malloc_custom(qregister->size * sizeof(double complex));
+
+    uint64_t s1 = 1ULL << q1->nb_qbits;
+    uint64_t s2 = 1ULL << q2->nb_qbits;
+    for(uint64_t i = 0; i < s1; i++) {
+        for(uint64_t j = 0; j < s2; j++) {
+            qregister->array[s2 * i + j] = q1->array[i] * q2->array[j];
+        }
+    }
+
+    return qregister;
 }
