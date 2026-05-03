@@ -1,10 +1,12 @@
 #include "fft.h"
+
 #include "utils.h"
+
 #include <math.h>
 #include <stdint.h>
 
-static uint64_t reverse_bits(uint64_t x, int n) {
-    uint64_t res = 0;
+static int64 reverse_bits(int64 x, int n) {
+    int64 res = 0;
     for (int i = 0; i < n; i++) {
         res = (res << 1) | (x & 1);
         x >>= 1;
@@ -12,13 +14,13 @@ static uint64_t reverse_bits(uint64_t x, int n) {
     return res;
 }
 
-void compute_fft(double complex *x, uint64_t n, bool inverse) {
+void compute_fft(double complex *x, int64 n, bool inverse) {
     // Cooley-Tukey FFT algorithm
     int levels = 0;
-    while (((uint64_t)1ULL << levels) < n) levels++;
+    while (((int64)1ULL << levels) < n) levels++;
 
-    for (uint64_t i = 0; i < n; i++) {
-        uint64_t j = reverse_bits(i, levels);
+    for (int64 i = 0; i < n; i++) {
+        int64 j = reverse_bits(i, levels);
         if (i < j) {
             double complex temp = x[i];
             x[i] = x[j];
@@ -27,12 +29,12 @@ void compute_fft(double complex *x, uint64_t n, bool inverse) {
     }
 
     for (int s = 1; s <= levels; s++) {
-        uint64_t m = (uint64_t)1ULL << s;
-        uint64_t m2 = m >> 1;
+        int64 m = (int64)1ULL << s;
+        int64 m2 = m >> 1;
         double complex w_m = cexp((inverse ? 2.0 : -2.0) * M_PI * I / (double)m);
-        for (uint64_t k = 0; k < n; k += m) {
+        for (int64 k = 0; k < n; k += m) {
             double complex w = 1.0;
-            for (uint64_t j = 0; j < m2; j++) {
+            for (int64 j = 0; j < m2; j++) {
                 double complex t = w * x[k + j + m2];
                 double complex u = x[k + j];
                 x[k + j] = u + t;
@@ -43,9 +45,9 @@ void compute_fft(double complex *x, uint64_t n, bool inverse) {
     }
 }
 
-void qft_base(double complex *x, uint64_t n, bool inverse) {
+void qft_base(double complex *x, int64 n, bool inverse) {
     compute_fft(x, n, !inverse);
     
     double complex scale = 1.0 / sqrt((double)n);
-    for (uint64_t i = 0; i < n; i++) x[i] *= scale;
+    for (int64 i = 0; i < n; i++) x[i] *= scale;
 }

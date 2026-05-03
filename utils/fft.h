@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void qft_base(double complex *x, uint64_t n, bool inverse);
+#include "../utils/utils.h"
+
+void qft_base(double complex *x, int64 n, bool inverse);
 
 #endif

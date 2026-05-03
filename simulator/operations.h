@@ -3,6 +3,8 @@
 
 #include "../builder/registers.h"
 
+#include "../utils/utils.h"
+
 /* 
  * 1-qbit gates
  * Transformations on a single qubit 'qbit'.
@@ -55,6 +57,12 @@ void apply_gate_phase(QuantumRegister *qreg, int qbit, double phase);
 void apply_cnot(QuantumRegister *qreg, int control, int target);
 
 /**
+ * @brief Applies the Controlled-NOT (CNOT) gate.
+ * Apply complex exponent on states with target = 1
+ */
+void apply_controlled_rotation(QuantumRegister *qreg, int c, int t, double phase);
+
+/**
  * @brief Applies the SWAP gate.
  * Exchanges the states of 'qbit1' and 'qbit2'.
  */
@@ -72,13 +80,13 @@ void apply_swap(QuantumRegister *qreg, int qbit1, int qbit2);
  * @param nb_qbits Number of qubits in the input register.
  * @param function Predicate function for marking states.
  */
-void apply_oracle_phase(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*function)(uint64_t number));
+void apply_oracle_phase(QuantumRegister *qreg, int start_qbit, int nb_qbits, bool (*function)(int64 number));
 
 /**
  * @brief Applies an ancilla-based oracle.
  * Flips the 'ancilla_qbit' if the input register [start, start+nb] satisfies 'function'.
  */
-void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, int ancilla_qbit, bool (*function)(uint64_t number));
+void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, int ancilla_qbit, bool (*function)(int64 number));
 
 /**
  * @brief Applies the Grover diffusion operator (inversion about the mean).
@@ -106,6 +114,6 @@ void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits);
  * @brief Applies the Unitary Transform verifying U|k> = U|ak[N]>
  * WARNING : a must be a coprime of N, eq it exists (u,v), au + Nv = 1 (else it will do UNDEFINED BEHAVIOR)
  */
-void apply_prod(QuantumRegister *qreg, int start_qbit, int nb_qbits, int a, int N);
-void apply_controlled_prod_exp(QuantumRegister *qreg, int c, int start_qbit, int nb_qbits, int a, int N, int k);
+void apply_prod(QuantumRegister *qreg, int start_qbit, int nb_qbits, int64 a, int64 N);
+void apply_controlled_prod_exp(QuantumRegister *qreg, int c, int start_qbit, int nb_qbits, int64 a, int64 N, int64 k);
 #endif

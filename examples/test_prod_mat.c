@@ -10,15 +10,15 @@
 #include <time.h>
 
 int get_nb(QuantumRegister *qreg) {
-    for(int i = 0; i < qreg->size; i++) {
+    for(int64 i = 0; i < qreg->size; i++) {
         if(cabs(qreg->array[i]) > EPSILON) return i;
     }
     return -1;
 }
 
-void main() {
+int main() {
     srand(time(NULL));
-
+    
     int n = 5; int N = 1 << n;
     int maxa = 5;
 
@@ -32,4 +32,6 @@ void main() {
         int res = get_nb(qreg);
         printf("%d * %d = %d [%d]\n", a, i, res, N);
     }
+
+    return EXIT_SUCCESS;
 }

@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -W -Wall -pedantic #-fopenmp 
-LDFLAGS = -lm #-fopenmp -lpthread
+CFLAGS = -W -Wall -pedantic -fopenmp 
+LDFLAGS = -lm -fopenmp -lpthread
 
 BIN_DIR = bin
 
@@ -11,9 +11,10 @@ $(BIN_DIR)/%.o: %.c
 
 BUILDER = $(shell find builder -name "*.c")
 SIMULATOR = $(shell find simulator -name "*.c")
+CIRCUITS = $(shell find circuits -name "*.c")
 UTILS = $(shell find utils -name "*.c")
 
-SOURCES = $(BUILDER) $(SIMULATOR) $(UTILS)
+SOURCES = $(BUILDER) $(SIMULATOR) $(CIRCUITS) $(UTILS)
 
 OBJECTS = $(patsubst %.c,$(BIN_DIR)/%.o,$(SOURCES))
 

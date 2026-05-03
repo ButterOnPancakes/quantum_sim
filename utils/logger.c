@@ -31,7 +31,7 @@ void logger_message(Logger *logger, const char* tag, const char* message) {
     if (logger == NULL || message == NULL) return;
     double current_time = now_seconds() - logger->start_time;
     if (logger->log_file != NULL) {
-        fprintf(logger->log_file, "[%f] [%s] %s\n", current_time, tag, message);
+        fprintf(logger->log_file, "[%f] [%s] %s", current_time, tag, message);
         fflush(logger->log_file);
     } else {
         printf("[%f] [%s] %s\n", current_time, tag, message);
