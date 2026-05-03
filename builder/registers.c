@@ -1,4 +1,5 @@
 #include "registers.h"
+#include "registers_internal.h"
 
 #include "../utils/utils.h"
 
@@ -66,7 +67,10 @@ void qregister_free(QuantumRegister *qreg) {
 }
 
 void qregister_print(QuantumRegister *qreg) {
-    if(qreg->nb_qbits > 4) return;
+    if(qreg->nb_qbits > 4) {
+        printf("Register size is too large to display\n");
+        return;
+    }
     for(int64 i = 0; i < qreg->size; i++) {
         printf("%f + i%f\n", creal(qreg->array[i]), cimag(qreg->array[i]));
     }
@@ -75,6 +79,10 @@ void qregister_print(QuantumRegister *qreg) {
 double complex qregister_get_amplitude(QuantumRegister *qreg, int64 index) {
     assert(qreg != NULL && index < qreg->size);
     return qreg->array[index];
+}
+int qregister_get_nb_qbits(QuantumRegister *qreg) {
+    assert(qreg != NULL);
+    return qreg->nb_qbits;
 }
 void qregister_set_amplitude(QuantumRegister *qreg, int64 index, double complex value) {
     assert(qreg != NULL && index < qreg->size);

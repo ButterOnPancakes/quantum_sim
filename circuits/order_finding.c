@@ -13,7 +13,7 @@
 
 #include <omp.h>
 
-int64 phase_estimation(QuantumRegister *eigenvector, int precision, int64 a, int64 N) {
+int64 phase_estimation(QuantumRegister *eigenvector, int n, int precision, int64 a, int64 N) {
     QuantumRegister *out_reg = qregister_create(precision); // precision of r
     if (!out_reg) {
         fprintf(stderr, "Error allocating memory for fst_reg\n");
@@ -31,7 +31,7 @@ int64 phase_estimation(QuantumRegister *eigenvector, int precision, int64 a, int
     apply_n_hadamard(qreg, 0, precision);
     for(int i = 0; i < precision; i++) {
         // controlled custom gate 
-        apply_controlled_prod_exp(qreg, i, precision, eigenvector->nb_qbits, a, N, 1ULL << i);
+        apply_controlled_prod_exp(qreg, i, precision, n, a, N, 1ULL << i);
     }
     apply_iqft(qreg, 0, precision);
 
@@ -94,9 +94,9 @@ int64 order_finding(int64 a, int64 N, int ITERATIONS, Logger *logger) {
             exit(1);
         }
         
-        eigenvector->array[0] = 0; eigenvector->array[1] = 1;
+        qregister_set_number(eigenvector, 1);
 
-        int64 output = phase_estimation(eigenvector, precision, a, N);
+        int64 output = phase_estimation(eigenvector, n, precision, a, N);
         qregister_free(eigenvector);
 
         double frac = (double) output / pow(2, 2*n);

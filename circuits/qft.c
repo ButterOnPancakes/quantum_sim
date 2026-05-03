@@ -11,7 +11,8 @@
 
 // Reversed because LSB convention
 void qft(QuantumRegister *qreg) {
-    for(int j = qreg->nb_qbits - 1; j >= 0; j--) {
+    int qubits = qregister_get_nb_qbits(qreg);
+    for(int j = qubits - 1; j >= 0; j--) {
         apply_hadamard(qreg, j);
         double phase = M_PI / 2;
         for(int i = j - 1; i >= 0; i--) {
@@ -20,7 +21,7 @@ void qft(QuantumRegister *qreg) {
         }
     }
 
-    for(int i = 0; i < qreg->nb_qbits / 2; i++) {
-        apply_swap(qreg, i, qreg->nb_qbits - i - 1);
+    for(int i = 0; i < qubits / 2; i++) {
+        apply_swap(qreg, i, qubits - i - 1);
     }
 }

@@ -5,16 +5,9 @@
 
 #include "../utils/utils.h"
 
-typedef struct qregister_s {
-    double complex* array;
-    int64 size;
-    int nb_qbits;
-} QuantumRegister;
+typedef struct qregister_s QuantumRegister;
 
-typedef struct cregister_s {
-    bool* array;
-    int size;
-} ClassicalRegister;
+typedef struct cregister_s ClassicalRegister;
 
 // ---- Classical Registers ----
 ClassicalRegister *cregister_create(int size);
@@ -31,6 +24,7 @@ QuantumRegister *qregister_create(int nb_qbits);
 void qregister_free(QuantumRegister *qreg);
 
 double complex qregister_get_amplitude(QuantumRegister *qreg, int64 index);
+int qregister_get_nb_qbits(QuantumRegister *qreg);
 void qregister_set_amplitude(QuantumRegister *qreg, int64 index, double complex value);
 void qregister_set_number(QuantumRegister *qreg, int j);
 

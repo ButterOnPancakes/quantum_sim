@@ -9,9 +9,10 @@
 #include <math.h>
 #include <time.h>
 
-int get_nb(QuantumRegister *qreg) {
-    for(int64 i = 0; i < qreg->size; i++) {
-        if(cabs(qreg->array[i]) > EPSILON) return i;
+int get_nb(QuantumRegister *qreg, int n) {
+    int64 size = 1ULL << n;
+    for(int64 i = 0; i < size; i++) {
+        if(cabs(qregister_get_amplitude(qreg, i)) > EPSILON) return i;
     }
     return -1;
 }
@@ -27,10 +28,11 @@ int main() {
 
     for(int i = 0; i < N; i++) {
         QuantumRegister *qreg = qregister_create(n);
-        qreg->array[0] = 0; qreg->array[i] = 1;
+        qregister_set_number(qreg, i);
         apply_prod(qreg, 0, n, a, N);
-        int res = get_nb(qreg);
+        int res = get_nb(qreg, n);
         printf("%d * %d = %d [%d]\n", a, i, res, N);
+        qregister_free(qreg);
     }
 
     return EXIT_SUCCESS;

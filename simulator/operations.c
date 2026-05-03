@@ -1,5 +1,6 @@
 #include "operations.h"
 #include "../builder/registers.h"
+#include "../builder/registers_internal.h"
 #include "../utils/utils.h"
 #include "../utils/fft.h"
 
@@ -12,7 +13,12 @@
 
 #include <omp.h>
 
-#define USE_OMP false
+/*
+ * Per-gate OpenMP parallelism is intentionally disabled here.
+ * The thread-fork/join overhead dominates for individual gate loops.
+ * Coarse-grained parallelism is applied at the circuit level instead
+ * (see order_finding.c: #pragma omp parallel for over phase-estimation runs).
+ */
 
 // 1-qbit gate, issu de opti_version
 void apply_hadamard(QuantumRegister *qreg, int qbit) {

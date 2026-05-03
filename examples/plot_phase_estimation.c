@@ -22,7 +22,8 @@ void run_phase_estimation(FILE *graph, int precision, double theta) {
     apply_iqft(qreg, 0, precision);
 
     double proba_tot = 0;
-    for(int64 i = 1 << precision; i < qreg->size; i++) {
+    int64 size = 1ULL << (precision + 1);
+    for(int64 i = 1 << precision; i < size; i++) {
         double proba = qregister_calc_proba_multiple(qreg, i);
         proba_tot += proba;
         fprintf(graph, "%lf %lf\n", i / (double) (1 << precision) - 1., proba);

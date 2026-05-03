@@ -61,33 +61,23 @@ int execute_shor(int64 N, Logger *logger) {
     }
 }
 
-int main(/*int argc, char *argv[]*/) {
+int main(int argc, char *argv[]) {
     srand(time(NULL));
     
     int threads = omp_get_max_threads();
     omp_set_num_threads(threads);
     ITERATIONS = threads;
 
-    //if(argc < 2) {fprintf(stderr, "./shor <N>"); return EXIT_FAILURE;}
-    //int64 N = atoll(argv[1]);
+    if(argc < 2) {fprintf(stderr, "./shor <N>"); return EXIT_FAILURE;}
+    int64 N = atoll(argv[1]);
 
     Logger *logger = logger_create("Shor execution");
 
-    int MAX = 55;
-    double valeur[55] = {
-        15, 21, 33, 35, 39, 45, 51, 55, 57, 63, 
-        65, 69, 75, 85, 87, 91, 93, 95, 99, 105, 
-        111, 115, 117, 119, 123, 129, 133, 135, 141, 183, 
-        205, 273, 319, 411, 469, 525, 603, 615, 621, 623, 
-        629, 655, 665, 693, 725, 731, 747, 749, 759, 775, 
-        791, 813, 831, 843, 849
-    };
-    for(int i = 0; i < MAX; i++) {
-        int64 N = valeur[i];
-        if(execute_shor(N, logger) == EXIT_FAILURE) return EXIT_FAILURE;
-    }
+    execute_shor(N, logger);
 
     logger_free(logger);
 
-    return 1;
+    printf("Execution finished ! Check logs folder.\n");
+
+    return EXIT_SUCCESS;
 }
