@@ -28,14 +28,14 @@ void init_matrices(int n) {
     unsigned long size = 1 << n;
 
     /* Init S0 = 2|0><0| - In */
-    S0_MAT = calloc(size * size, sizeof(double complex));
+    S0_MAT = calloc_custom(size * size, sizeof(double complex));
     for(unsigned long i = 0; i < size; i++) {
         S0_MAT[i * size + i] = -1.0;
     }
     S0_MAT[0] = 1.0;
 
     /* Init Oracle */
-    ORACLE_MAT = calloc(size * size, sizeof(double complex));
+    ORACLE_MAT = calloc_custom(size * size, sizeof(double complex));
     for(unsigned long i = 0; i < size; i++) {
         ORACLE_MAT[i * size + i] = 1.0;
     }
@@ -74,19 +74,19 @@ double run_grover(int n, int l) {
 
     double time = circuit_execute(qc, qregister, cregister, true);
     cregister_print(stdout, cregister);
-    circuit_free(qc, false);
+    circuit_free(qc);
     cregister_free(cregister);
     
     char title[1024];
     sprintf(title, "Grover Statevector step %d", l);
     graph state = graph_create(title, "Basis States", "Amplitude");
-    graph_statevector(state, qregister->statevector, 1 << qregister->nb_qbits);
+    graph_statevector(state, qregister_get_statevector(qregister), 1 << qregister_get_num_qubits(qregister));
     graph_free(state);
 
     qregister_free(qregister);
 
-    free(ORACLE_MAT);
-    free(S0_MAT);
+    free_custom(ORACLE_MAT);
+    free_custom(S0_MAT);
 
     return time;
 }

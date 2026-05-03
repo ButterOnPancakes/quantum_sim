@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 double now_seconds() {
     struct timespec ts;
@@ -25,6 +26,23 @@ void print_int_array(int *bits, int n) {
         if (i < n - 1) printf("%d, ", bits[i]);
         else printf("%d]\n", bits[i]);
     }
+}
+
+void *malloc_custom(size_t size) {
+    void *p = malloc(size);
+    assert(p != NULL && "Memory allocation failed");
+    return p;
+}
+
+void *calloc_custom(size_t nmemb, size_t size) {
+    void *p = calloc(nmemb, size);
+    assert(p != NULL && "Memory allocation failed");
+    return p;
+}
+
+void free_custom(void *ptr) {
+    assert(ptr != NULL && "Freeing NULL pointer");
+    free(ptr);
 }
 
 void *aligned_alloc_64(size_t size) {

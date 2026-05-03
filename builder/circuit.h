@@ -8,13 +8,10 @@
 #include <complex.h>
 #include <stdio.h>
 
-typedef struct {
-    int nb_qbits;
-    List* gates;
-} QuantumCircuit;
+typedef struct QuantumCircuit QuantumCircuit;
 
 QuantumCircuit *circuit_create(int nb_qbits);
-void circuit_free(QuantumCircuit *circuit, bool free_custom);
+void circuit_free(QuantumCircuit *circuit);
 
 void circuit_print(FILE *channel, QuantumCircuit *circuit);
 

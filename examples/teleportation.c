@@ -13,7 +13,7 @@ QuantumRegister *create_bell_state() {
     QuantumCircuit *qc = circuit_create(2);    
     add_unitary_gate(qc, 0, GATE_H, 0);
     circuit_execute(qc, qr, NULL, false);
-    circuit_free(qc, false);
+    circuit_free(qc);
     return qr;
 }
 
@@ -38,18 +38,18 @@ int main() {
     ClassicalRegister *alice_reg = cregister_create(2);
 
     circuit_execute(alice_circuit, qbits, alice_reg, false);
-    circuit_free(alice_circuit, false);
+    circuit_free(alice_circuit);
 
     //Tour de Bob, il n'a acces que aux bits mesurés et au 3e qbit
     QuantumCircuit *bob_circuit = circuit_create(3);
-    if(alice_reg->bits[1] == 1) {
+    if(cregister_get_bit(alice_reg, 1) == 1) {
         add_unitary_gate(bob_circuit, 2, GATE_X, 0);
     }
-    if(alice_reg->bits[0] == 1) {
+    if(cregister_get_bit(alice_reg, 0) == 1) {
         add_unitary_gate(bob_circuit, 2, GATE_Z, 0);
     }
     circuit_execute(bob_circuit, qbits, NULL, false);
-    circuit_free(bob_circuit, false);
+    circuit_free(bob_circuit);
 
     cregister_free(alice_reg);
 

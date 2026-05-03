@@ -192,7 +192,7 @@ void ParseAndAddCustomGate(QuantumCircuit *qc) {
     long required_entries = 1;
     for(int i=0; i<q_count; i++) required_entries *= 4;
     
-    double complex *mat = malloc(required_entries * sizeof(double complex));
+    double complex *mat = malloc_custom(required_entries * sizeof(double complex));
     
     char mBuf[2048];
     strncpy(mBuf, customMatrix, 2047);
@@ -207,10 +207,10 @@ void ParseAndAddCustomGate(QuantumCircuit *qc) {
         mat[i] = re + im * I;
     }
     
-    int *final_qubits = malloc(q_count * sizeof(int));
+    int *final_qubits = malloc_custom(q_count * sizeof(int));
     for(int i=0; i<q_count; i++) final_qubits[i] = qubits[i];
     
-    char *final_label = malloc(strlen(customLabel) + 1);
+    char *final_label = malloc_custom(strlen(customLabel) + 1);
     strcpy(final_label, customLabel);
     
     add_custom_gate(qc, q_count, final_qubits, mat, final_label);
@@ -436,11 +436,11 @@ void HandleInput(QuantumCircuit *qc, QuantumRegister *qreg, ClassicalRegister *c
 
                      if (hit) {
                          if (g->class == CUSTOM) {
-                             free(g->gate.custom.qbits);
-                             free(g->gate.custom.mat);
-                             free(g->gate.custom.label);
+                             free_custom(g->gate.custom.qbits);
+                             free_custom(g->gate.custom.mat);
+                             free_custom(g->gate.custom.label);
                          }
-                         free(g);
+                         free_custom(g);
                          list_iterator_remove_current(&iter);
                          break;
                      }

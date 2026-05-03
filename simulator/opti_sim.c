@@ -11,7 +11,7 @@
 #include <omp.h>
 
 #include "gates.h"
-
+#include "../builder/internal.h"
 #include "../utils/list.h"
 #include "../utils/utils.h"
 #include "../utils/logger.h"
@@ -66,10 +66,13 @@ double circuit_execute(QuantumCircuit *circuit, QuantumRegister *qregister, Clas
             
             case MEAS:
                 if(log) sprintf(buffer, "Measuring qubit %d into classical bit %d.", gate->gate.measure.qbit, gate->gate.measure.cbit);
-                cregister->bits[gate->gate.measure.cbit] = measure_qubit_inplace(
+                int result = measure_qubit_inplace(
                     qregister->statevector, qregister->nb_qbits, 
                     gate->gate.measure.qbit
                 );
+                if (cregister) {
+                    cregister->bits[gate->gate.measure.cbit] = result;
+                }
                 break;
 
             default:

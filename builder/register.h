@@ -4,15 +4,14 @@
 #include <complex.h>
 #include <stdio.h>
 
-typedef struct {
-    int *bits;
-    int nb_bits;
-} ClassicalRegister;
+typedef struct ClassicalRegister ClassicalRegister;
+typedef struct QuantumRegister QuantumRegister;
 
-typedef struct {
-    double complex *statevector;
-    int nb_qbits;
-} QuantumRegister;
+int cregister_get_num_bits(const ClassicalRegister *cregister);
+int cregister_get_bit(const ClassicalRegister *cregister, int index);
+
+int qregister_get_num_qubits(const QuantumRegister *qregister);
+double complex *qregister_get_statevector(const QuantumRegister *qregister);
 
 ClassicalRegister *cregister_create(int nbits);
 void cregister_print(FILE *channel, ClassicalRegister *cregister);

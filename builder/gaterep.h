@@ -12,32 +12,7 @@ typedef enum {
     GATE_PHASE
 } SingleBitGate;
 
-typedef struct {
-    enum {MEAS, UNITARY, CONTROL, CUSTOM} class;
-    union {
-        struct {
-            int qbit;
-            int cbit;
-        } measure;
-        struct {
-            int qbit;
-            SingleBitGate type;
-            double phase; //exp(I * phase)
-        } unitary;
-        struct {
-            int control;
-            int qbit;
-            SingleBitGate type;
-            double phase; //exp(I * phase)
-        } control;
-        struct {
-            int nb_qbits;
-            int *qbits;
-            double complex *mat;
-            char *label;
-        } custom;
-    } gate;
-} Gate;
+typedef struct Gate Gate;
 
 Gate *create_unitary_gate(int t, SingleBitGate tg, double phase);
 Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase);

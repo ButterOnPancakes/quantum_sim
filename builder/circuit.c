@@ -1,5 +1,5 @@
 #include "circuit.h"
-
+#include "internal.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,12 +17,11 @@ QuantumCircuit *circuit_create(int nb_qbits) {
     circuit->nb_qbits = nb_qbits;
     return circuit;
 }
-void circuit_free(QuantumCircuit *circuit, bool free_custom) {
+void circuit_free(QuantumCircuit *circuit) {
     ListIterator iter = list_iterator_begin(circuit->gates);
     while (list_iterator_has_next(&iter)) {
         Gate *gate = list_iterator_next(&iter);
-        if(gate->class == CUSTOM && free_custom) {
-            free(gate->gate.custom.mat);
+        if(gate->class == CUSTOM) {
             free(gate->gate.custom.qbits);
         }
         free(gate);

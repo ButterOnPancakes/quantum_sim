@@ -11,6 +11,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include "../utils/utils.h"
 
 #include <omp.h>
 
@@ -56,9 +57,9 @@ uint64_t set_bit(uint64_t x, int pos, int nqbits, int val) {
     return val ? (x | mask) : (x & ~mask);
 }
 
-void apply_single_qubit_inplace(double complex *state, int nqubits, int k, double complex g[4]) {
-    uint64_t size = 1 << nqubits;
-    uint64_t bit = 1ULL << (nqubits - k - 1);
+void apply_single_qubit_inplace(double complex *state, int nqubits, int t, double complex g[4]) {
+    uint64_t size = 1ULL << nqubits;
+    uint64_t bit = 1ULL << (nqubits - t - 1);
 
     /* Parcours tous les b_1, ..., b_k-1, b_k+1, ..., b_n possibles en
     effectuant la division euclidienne d'un indice par 2^(k-1) :
@@ -82,9 +83,9 @@ void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1,
     assert(q0 != q1);
     if(q1 < q0) {int temp = q1; q1 = q0; q0 = temp;}
 
-    uint64_t size = 1 << nqubits;
-    uint64_t bit0 = 1 << (nqubits - q0 - 1);
-    uint64_t bit1 = 1 << (nqubits - q1 - 1);
+    uint64_t size = 1ULL << nqubits;
+    uint64_t bit0 = 1ULL << (nqubits - q0 - 1);
+    uint64_t bit1 = 1ULL << (nqubits - q1 - 1);
 
     /* Même principe : 
     i0 = (k * 2^(q1 + 1)) + (l * 2^(q0+1)) + r
@@ -115,9 +116,9 @@ void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1,
     }
 }
 void apply_controlled_u_inplace(double complex *state, int nqubits, int c, int t, double complex U[4]) {
-    uint64_t size = 1 << nqubits;
-    uint64_t control = 1 << (nqubits - c - 1);
-    uint64_t target = 1 << (nqubits - t - 1);
+    uint64_t size = 1ULL << nqubits;
+    uint64_t control = 1ULL << (nqubits - c - 1);
+    uint64_t target = 1ULL << (nqubits - t - 1);
 
     //#pragma omp parallel for schedule(static)
     for(uint64_t base = 0; base < size; base++) {
@@ -156,10 +157,10 @@ uint64_t replace_subindex(uint64_t index, int *targets, int k, int nqbits, uint6
 }
 
 void apply_custom_inplace(double complex *state, int nqbits, int *targets, int k, double complex *U) {
-    uint64_t dim = 1 << nqbits;
-    uint64_t subdim = 1 << k;
+    uint64_t dim = 1ULL << nqbits;
+    uint64_t subdim = 1ULL << k;
 
-    double complex *new_state = calloc(dim, sizeof(double complex));
+    double complex *new_state = calloc_custom(dim, sizeof(double complex));
 
     for (uint64_t i = 0; i < dim; i++) {
         uint64_t row = extract_subindex(i, targets, k, nqbits);
@@ -171,12 +172,12 @@ void apply_custom_inplace(double complex *state, int nqbits, int *targets, int k
     }
 
     memcpy(state, new_state, dim * sizeof(double complex));
-    free(new_state);
+    free_custom(new_state);
 }
 
 int measure_qubit_inplace(double complex *state, int nqubits, int t) {
-    uint64_t size = 1 << nqubits;
-    uint64_t bit = 1 << (nqubits - t - 1);
+    uint64_t size = 1ULL << nqubits;
+    uint64_t bit = 1ULL << (nqubits - t - 1);
 
     // Compute Norm squared of P0 * phi (phi after projection of the bit on zero)
     double p0 = 0.0;

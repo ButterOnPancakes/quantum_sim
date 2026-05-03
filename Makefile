@@ -33,5 +33,8 @@ $(GUI_BIN): $(BIN_DIR)/%: $(BIN_DIR)/%.o $(OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGSGUI)
 
+all:
+	@$(MAKE) $(EX_BIN)
+
 clean:
 	rm -rf $(BIN_DIR)

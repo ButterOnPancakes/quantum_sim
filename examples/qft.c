@@ -26,9 +26,9 @@ int **add_qft_gate(QuantumCircuit* qc, int n) {
         }
     }
 
-    int **targets = malloc((n / 2) * sizeof(int*));
+    int **targets = malloc_custom((n / 2) * sizeof(int*));
     for(int i = 0; i < n / 2; i++) {
-        targets[i] = malloc(2 * sizeof(int));
+        targets[i] = malloc_custom(2 * sizeof(int));
         targets[i][0] = i;
         targets[i][1] = n - i - 1;
     }
@@ -40,10 +40,15 @@ int **add_qft_gate(QuantumCircuit* qc, int n) {
     return targets;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     srand(time(NULL));
 
-    int n = 24;
+    if(argc < 2) {
+        printf("Usage: %s <number of qubits>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    int n = atoi(argv[1]);
 
     Logger *logger = logger_create("qft.log");
 
@@ -57,21 +62,21 @@ int main() {
     circuit_print(logger->log_file, qc);
 
     double time = circuit_execute(qc, qregister, cregister, true);
-    printf("%f\n", time);
+    printf("Execution time: %f seconds\n", time);
 
     logger_message(logger, "INFO", "Quantum Fourier Transform executed successfully.");
     logger_free(logger);
 
-    circuit_free(qc, false);
+    circuit_free(qc);
     cregister_free(cregister);
 
     for(int i = 0; i < n / 2; i++) {
-        free(targets[i]);
+        free_custom(targets[i]);
     }
-    free(targets);
+    free_custom(targets);
 
     graph g = graph_create("QFT Statevector", "Basis States", "Amplitude");
-    graph_statevector(g, qregister->statevector, 1 << n);
+    graph_statevector(g, qregister_get_statevector(qregister), 1 << qregister_get_num_qubits(qregister));
     graph_free(g);
     
     qregister_free(qregister);

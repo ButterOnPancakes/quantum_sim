@@ -1,10 +1,12 @@
 #include "gaterep.h"
+#include "internal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "../utils/utils.h"
 
 Gate *create_unitary_gate(int t, SingleBitGate tg, double phase) {
-    Gate *gate = malloc(sizeof(Gate));
+    Gate *gate = malloc_custom(sizeof(Gate));
     gate->class = UNITARY;
     gate->gate.unitary.type = tg;
     gate->gate.unitary.qbit = t;
@@ -12,7 +14,7 @@ Gate *create_unitary_gate(int t, SingleBitGate tg, double phase) {
     return gate;
 }
 Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase) {
-    Gate *gate = malloc(sizeof(Gate));
+    Gate *gate = malloc_custom(sizeof(Gate));
     gate->class = CONTROL;
     gate->gate.control.control = c;
     gate->gate.control.qbit = t;
@@ -22,16 +24,19 @@ Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase) {
 }
 // Mat size must be 2^nb_qbits !
 Gate *create_custom_gate(int nb_qbits, int *t, double complex *mat, char *label) {
-    Gate *gate = malloc(sizeof(Gate));
+    Gate *gate = malloc_custom(sizeof(Gate));
     gate->class = CUSTOM;
     gate->gate.custom.nb_qbits = nb_qbits;
-    gate->gate.custom.qbits = t;
+    gate->gate.custom.qbits = malloc_custom(nb_qbits * sizeof(int));
+    for(int i = 0; i < nb_qbits; i++) {
+        gate->gate.custom.qbits[i] = t[i];
+    }
     gate->gate.custom.mat = mat;
     gate->gate.custom.label = label;
     return gate;
 }
 Gate *create_measure(int qbit, int cbit) {
-    Gate *gate = malloc(sizeof(Gate));
+    Gate *gate = malloc_custom(sizeof(Gate));
     gate->class = MEAS;
     gate->gate.measure.cbit = cbit;
     gate->gate.measure.qbit = qbit;

@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 Logger *logger_create(const char* filename) {
-    Logger *logger = (Logger *)malloc(sizeof(Logger));
+    Logger *logger = (Logger *)malloc_custom(sizeof(Logger));
     if (logger == NULL) {
         perror("Failed to initialize logger");
         return NULL;
@@ -16,6 +16,7 @@ Logger *logger_create(const char* filename) {
     FILE *file = fopen(filepath, "w");
     if (file == NULL) {
         perror("Failed to create log file");
+        free_custom(logger);
         return NULL;
     }
     logger->log_file = file;
@@ -24,7 +25,7 @@ Logger *logger_create(const char* filename) {
 }
 void logger_free(Logger *logger) {
     fclose(logger->log_file);
-    free(logger);
+    free_custom(logger);
 }
 
 void logger_message(Logger *logger, const char* tag, const char* message) {

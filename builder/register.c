@@ -1,5 +1,5 @@
 #include "register.h"
-
+#include "internal.h"
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -13,6 +13,25 @@ double complex *state_alloc(int nqubits) {
         s = malloc(dim * sizeof(double complex));
     }
     return s;
+}
+
+int cregister_get_num_bits(const ClassicalRegister *cregister) {
+    return cregister->nb_bits;
+}
+
+int cregister_get_bit(const ClassicalRegister *cregister, int index) {
+    if (index >= 0 && index < cregister->nb_bits) {
+        return cregister->bits[index];
+    }
+    return 0;
+}
+
+int qregister_get_num_qubits(const QuantumRegister *qregister) {
+    return qregister->nb_qbits;
+}
+
+double complex *qregister_get_statevector(const QuantumRegister *qregister) {
+    return qregister->statevector;
 }
 
 ClassicalRegister *cregister_create(int nbits) {

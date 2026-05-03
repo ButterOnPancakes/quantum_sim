@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../utils/utils.h"
+
 List* list_create(void) {
-    List* list = malloc(sizeof(List));
+    List* list = malloc_custom(sizeof(List));
     if (!list) return NULL;
     
     list->head = NULL;
@@ -15,7 +17,7 @@ List* list_create(void) {
 void list_destroy(List* list) {
     if (!list) return;
     list_clear(list);
-    free(list);
+    free_custom(list);
 }
 
 void list_clear(List* list) {
@@ -24,7 +26,7 @@ void list_clear(List* list) {
     ListNode* current = list->head;
     while (current) {
         ListNode* next = current->next;
-        free(current);
+        free_custom(current);
         current = next;
     }
     
@@ -36,7 +38,7 @@ void list_clear(List* list) {
 int list_append(List* list, void* data) {
     if (!list) return 0;
     
-    ListNode* new_node = malloc(sizeof(ListNode));
+    ListNode* new_node = malloc_custom(sizeof(ListNode));
     if (!new_node) return 0;
     
     new_node->data = data;
@@ -56,7 +58,7 @@ int list_append(List* list, void* data) {
 int list_prepend(List* list, void* data) {
     if (!list) return 0;
     
-    ListNode* new_node = malloc(sizeof(ListNode));
+    ListNode* new_node = malloc_custom(sizeof(ListNode));
     if (!new_node) return 0;
     
     new_node->data = data;
@@ -77,7 +79,7 @@ int list_insert(List* list, int index, void* data) {
     if (index == 0) return list_prepend(list, data);
     if (index == list->size) return list_append(list, data);
     
-    ListNode* new_node = malloc(sizeof(ListNode));
+    ListNode* new_node = malloc_custom(sizeof(ListNode));
     if (!new_node) return 0;
     
     ListNode* current = list->head;
@@ -104,7 +106,7 @@ void* list_remove_first(List* list) {
         list->tail = NULL;
     }
     
-    free(node);
+    free_custom(node);
     list->size--;
     return data;
 }
@@ -122,7 +124,7 @@ void* list_remove_last(List* list) {
     }
     
     void* data = list->tail->data;
-    free(list->tail);
+    free_custom(list->tail);
     current->next = NULL;
     list->tail = current;
     list->size--;
@@ -144,7 +146,7 @@ void* list_remove_at(List* list, int index) {
     ListNode* to_remove = current->next;
     void* data = to_remove->data;
     current->next = to_remove->next;
-    free(to_remove);
+    free_custom(to_remove);
     
     list->size--;
     return data;
@@ -235,7 +237,7 @@ int list_iterator_remove_current(ListIterator* iter) {
         }
     }
     
-    free(to_remove);
+    free_custom(to_remove);
     iter->list->size--;
     return 1;
 }
@@ -243,7 +245,7 @@ int list_iterator_remove_current(ListIterator* iter) {
 int list_iterator_insert_after(ListIterator* iter, void* data) {
     if (!iter || !iter->current || !iter->list) return 0;
     
-    ListNode* new_node = malloc(sizeof(ListNode));
+    ListNode* new_node = malloc_custom(sizeof(ListNode));
     if (!new_node) return 0;
     
     new_node->data = data;

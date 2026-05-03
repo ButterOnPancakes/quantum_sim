@@ -110,7 +110,7 @@ void build_shor_generalized(QuantumCircuit *circuit, int N, int a, int n_countin
         // The gate acts on 1 control bit + n_target bits
         int gate_qubits = 1 + n_target;
         int dim = 1 << gate_qubits;
-        double complex *mat = calloc(dim * dim, sizeof(double complex));
+        double complex *mat = calloc_custom(dim * dim, sizeof(double complex));
 
         for (int i = 0; i < dim; i++) {
             int ctrl = (i >> n_target) & 1;
@@ -126,11 +126,12 @@ void build_shor_generalized(QuantumCircuit *circuit, int N, int a, int n_countin
         }
 
         // Map circuit indices: control bit j, then all target bits
-        int *q_indices = malloc(gate_qubits * sizeof(int));
+        int *q_indices = malloc_custom(gate_qubits * sizeof(int));
         q_indices[0] = j;
         for(int k = 0; k < n_target; k++) q_indices[k+1] = n_counting + k;
         
         add_custom_gate(circuit, gate_qubits, q_indices, mat, "C-ModExp");
+        free_custom(q_indices); // Free it here since circuit deep copies it
     }
 
     // 4. Inverse QFT on the counting register
@@ -146,6 +147,9 @@ void build_shor_generalized(QuantumCircuit *circuit, int N, int a, int n_countin
         add_measure(circuit, i, i);
     }
 }
+
+// Helper to free_custom dynamic matrices in shor
+void free_shor_matrices(QuantumCircuit *circuit);
 
 int get_r(int N, int *a_out) {
     int a = rand()%N;
@@ -175,7 +179,7 @@ int get_r(int N, int *a_out) {
     // Convert result bits to fractional phase
     int y = 0;
     for (int i = 0; i < n_counting; i++) {
-        if (creg->bits[i]) y |= (1 << (n_counting - 1 - i));
+        if (cregister_get_bit(creg, i)) y |= (1 << (n_counting - 1 - i));
     }
     
     double phase = (double)y / (1 << n_counting);
@@ -187,7 +191,8 @@ int get_r(int N, int *a_out) {
     int res = find_period_cfe(y, 1 << n_counting, a, N);
     printf("%d\n", res);
 
-    circuit_free(qc, true);
+    free_shor_matrices(qc);
+    circuit_free(qc);
     qregister_free(qreg);
     cregister_free(creg);
 
@@ -244,4 +249,15 @@ int main() {
     extract_factors(N, a, r);
 
     return 0;
+}
+
+#include "../builder/internal.h"
+void free_shor_matrices(QuantumCircuit *circuit) {
+    ListIterator iter = list_iterator_begin(circuit->gates);
+    while (list_iterator_has_next(&iter)) {
+        Gate *gate = list_iterator_next(&iter);
+        if(gate->class == CUSTOM) {
+            free_custom(gate->gate.custom.mat);
+        }
+    }
 }
