@@ -21,7 +21,7 @@
  */
 
 // 1-qbit gate, issu de opti_version
-void apply_hadamard(QuantumRegister *qreg, int qbit) {
+void apply_gate_hadamard(QuantumRegister *qreg, int qbit) {
     int64 size = 1ULL << qreg->nb_qbits;
     int64 bit = 1ULL << qbit; // Little Endian: bit 0 is the 2^0 position
     
@@ -238,7 +238,7 @@ void apply_diffusion(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
 
 void apply_n_hadamard(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     for(int i = start_qbit; i < start_qbit + nb_qbits; i++) {
-        apply_hadamard(qreg, i);
+        apply_gate_hadamard(qreg, i);
     }
 }
 

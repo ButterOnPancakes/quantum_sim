@@ -15,7 +15,7 @@
  * Matrix: 1/sqrt(2) * [1  1]
  *                     [1 -1]
  */
-void apply_hadamard(QuantumRegister *qreg, int qbit);
+void apply_gate_hadamard(QuantumRegister *qreg, int qbit);
 
 /**
  * @brief Applies the Pauli-X gate (NOT gate) to a qubit.

@@ -1,10 +1,10 @@
-#include "../builder/registers.h"
-#include "../simulator/operations.h"
+#include "../../builder/registers.h"
+#include "../../simulator/operations.h"
 
-#include "../circuits/order_finding.h"
+#include "../../circuits/order_finding.h"
 
-#include "../utils/utils.h"
-#include "../utils/logger.h"
+#include "../../utils/utils.h"
+#include "../../utils/logger.h"
 
 #include <stdio.h>
 #include <stdbool.h>

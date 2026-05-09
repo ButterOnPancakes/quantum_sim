@@ -1,7 +1,7 @@
-#include "../builder/registers.h"
-#include "../simulator/operations.h"
+#include "../../builder/registers.h"
+#include "../../simulator/operations.h"
 
-#include "../utils/utils.h"
+#include "../../utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@ void run_phase_estimation(FILE *graph, int precision, double theta) {
     
     QuantumRegister *qreg = qregister_fuse(out_reg, eigenvector); qregister_free(out_reg); qregister_free(eigenvector);
 
-    for(int i = 0; i < precision; i++) apply_hadamard(qreg, i);
+    for(int i = 0; i < precision; i++) apply_gate_hadamard(qreg, i);
     for(int i = 0; i < precision; i++) apply_controlled_rotation(qreg, i, precision, 2 * M_PI * theta * (1 << i));
     apply_iqft(qreg, 0, precision);
 

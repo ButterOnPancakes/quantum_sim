@@ -134,7 +134,7 @@ It tests the custom product matrix used in the order‑finding circuit.
 2. Create a quantum register, apply gates, and optionally measure:
 ```c
 QuantumRegister *qreg = qregister_create(3);
-apply_hadamard(qreg, 0);
+apply_gate_hadamard(qreg, 0);
 apply_cnot(qreg, 0, 1);
 qregister_print(qreg);
 ```
@@ -156,7 +156,7 @@ qregister_print(qreg);
 ### Gates (`simulator/operations.h`)
 | Function | Description |
 |---|---|
-| `apply_hadamard(qreg, q)` | Hadamard on qubit *q* |
+| `apply_gate_hadamard(qreg, q)` | Hadamard on qubit *q* |
 | `apply_gate_x/y/z(qreg, q)` | Pauli X, Y, Z |
 | `apply_gate_phase(qreg, q, φ)` | Phase‑shift Rz(φ) |
 | `apply_cnot(qreg, ctrl, tgt)` | Controlled‑NOT |

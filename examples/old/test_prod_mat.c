@@ -1,7 +1,7 @@
-#include "../builder/registers.h"
-#include "../simulator/operations.h"
+#include "../../builder/registers.h"
+#include "../../simulator/operations.h"
 
-#include "../utils/utils.h"
+#include "../../utils/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
