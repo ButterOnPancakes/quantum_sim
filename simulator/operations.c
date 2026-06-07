@@ -13,6 +13,8 @@
 
 #include <omp.h>
 
+#define USE_OMP true
+
 /*
  * Per-gate OpenMP parallelism is intentionally disabled here.
  * The thread-fork/join overhead dominates for individual gate loops.
