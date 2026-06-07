@@ -175,7 +175,7 @@ Provide any 2ᵏ × 2ᵏ row-major matrix and the list of target qubit indices:
 
 ```c
 // SWAP gate (4x4 matrix, 2 qubits)
-double complex SWAP[16] = {
+float complex SWAP[16] = {
     1, 0, 0, 0,
     0, 0, 1, 0,
     0, 1, 0, 0,
@@ -199,7 +199,7 @@ QuantumRegister *qregister_create(int nqubits);
 QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2);
 
 // Access the statevector (array of 2^n complex amplitudes)
-double complex *qregister_get_statevector(const QuantumRegister *qregister);
+float complex *qregister_get_statevector(const QuantumRegister *qregister);
 int             qregister_get_num_qubits(const QuantumRegister *qregister);
 
 void qregister_print(FILE *channel, QuantumRegister *qregister);
@@ -230,7 +230,7 @@ void add_unitary_gate(QuantumCircuit *circuit, int target, SingleBitGate gate, d
 void add_control_gate(QuantumCircuit *circuit, int control, int target, SingleBitGate gate, double phase);
 
 // Arbitrary k-qubit gate  (mat must be 2^k × 2^k row-major)
-void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *targets, double complex *mat, char *label);
+void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *targets, float complex *mat, char *label);
 
 // Measurement: collapses qubit `qbit`, result stored in classical bit `cbit`
 void add_measure(QuantumCircuit *circuit, int qbit, int cbit);
@@ -264,7 +264,7 @@ typedef enum {
 
 ```c
 graph graph_create(const char *title, const char *xlabel, const char *ylabel);
-void  graph_statevector(graph g, double complex *statevector, int n);
+void  graph_statevector(graph g, float complex *statevector, int n);
 void  graph_histogram(graph g, double *x, double *y, int n, const char *label);
 void  graph_free(graph g);
 ```

@@ -13,7 +13,7 @@ struct ClassicalRegister {
 };
 
 struct QuantumRegister {
-    double complex *statevector;
+    float complex *statevector;
     int nb_qbits;
 };
 
@@ -43,7 +43,7 @@ struct Gate {
         struct {
             int nb_qbits;
             int *qbits;
-            double complex *mat;
+            float complex *mat;
             char *label;
         } custom;
     } gate;

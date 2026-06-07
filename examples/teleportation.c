@@ -10,7 +10,7 @@
 
 QuantumRegister *create_bell_state() {
     QuantumRegister *qr = qregister_create(2);
-    QuantumCircuit *qc = circuit_create(2);    
+    QuantumCircuit *qc = circuit_create(2);
     add_unitary_gate(qc, 0, GATE_H, 0);
     circuit_execute(qc, qr, NULL, false);
     circuit_free(qc);

@@ -5,12 +5,12 @@
 
 #include "../utils/utils.h"
 
-double complex *state_alloc(int nqubits) {
+float complex *state_alloc(int nqubits) {
     uint64_t dim = 1ULL << nqubits;
-    double complex *s = aligned_alloc_64(dim * sizeof(double complex));
+    float complex *s = aligned_alloc_64(dim * sizeof(float complex));
     if (!s) {
         // fallback
-        s = malloc(dim * sizeof(double complex));
+        s = malloc(dim * sizeof(float complex));
     }
     return s;
 }
@@ -30,7 +30,7 @@ int qregister_get_num_qubits(const QuantumRegister *qregister) {
     return qregister->nb_qbits;
 }
 
-double complex *qregister_get_statevector(const QuantumRegister *qregister) {
+float complex *qregister_get_statevector(const QuantumRegister *qregister) {
     return qregister->statevector;
 }
 

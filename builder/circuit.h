@@ -18,7 +18,7 @@ void circuit_print(FILE *channel, QuantumCircuit *circuit);
 void add_unitary_gate(QuantumCircuit *circuit, int t, SingleBitGate tg, double phase);
 void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg, double phase);
 // Mat size must be 2^nb_qbits !
-void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label);
+void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, float complex *mat, char *label);
 void add_measure(QuantumCircuit *circuit, int qbit, int cbit);
 
 #endif

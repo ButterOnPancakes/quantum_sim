@@ -27,7 +27,7 @@ double circuit_execute(QuantumCircuit *circuit, QuantumRegister *qregister, Clas
         logger_message(logger, "INFO", "Starting circuit execution.");
     }
     
-    double complex gm[4] = {1, 0, 0, 1};
+    float complex gm[4] = {1, 0, 0, 1};
 
     char buffer[1024];
     

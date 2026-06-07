@@ -91,7 +91,7 @@ void add_control_gate(QuantumCircuit *circuit, int c, int t, SingleBitGate tg, d
     list_append(circuit->gates, create_control_gate(c, t, tg, phase));
 }
 // Mat size must be 2^nb_qbits !
-void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, double complex *mat, char *label) {
+void add_custom_gate(QuantumCircuit *circuit, int nb_qbits, int *t, float complex *mat, char *label) {
     Gate *gate = create_custom_gate(nb_qbits, t, mat, label);
     list_append(circuit->gates, gate);
 }

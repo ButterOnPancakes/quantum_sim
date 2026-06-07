@@ -15,7 +15,7 @@
 
 #include <omp.h>
 
-void apply_corresponding_gate(double complex g[4], SingleBitGate gt, double phase) {
+void apply_corresponding_gate(float complex g[4], SingleBitGate gt, double phase) {
     switch(gt) {
         case GATE_I: break;
         case GATE_H: gate_h(g); break;
@@ -26,25 +26,25 @@ void apply_corresponding_gate(double complex g[4], SingleBitGate gt, double phas
     }
 }
 
-void gate_h(double complex g[4]) {
+void gate_h(float complex g[4]) {
     double s = 1.0 / sqrt(2.0);
     g[0] = s; g[1] = s;
     g[2] = s; g[3] = -s;
 }
-void gate_x(double complex g[4]) {
+void gate_x(float complex g[4]) {
     g[0] = 0.0; g[1] = 1.0;
     g[2] = 1.0; g[3] = 0.0;
 }
-void gate_y(double complex g[4]) {
+void gate_y(float complex g[4]) {
     g[0] = 0.0; g[1] = -I;
     g[2] = I; g[3] = 0.0;
 }
-void gate_z(double complex g[4]) {
+void gate_z(float complex g[4]) {
     g[0] = 1.0; g[1] = 0.0;
     g[2] = 0.0; g[3] = -1.0;
 }
 
-void gate_phase(double complex g[4], double phase) {
+void gate_phase(float complex g[4], double phase) {
     g[0] = 1.0; g[1] = 0.0;
     g[2] = 0.0; g[3] = cexp(I * phase);
 }
@@ -57,7 +57,7 @@ uint64_t set_bit(uint64_t x, int pos, int nqbits, int val) {
     return val ? (x | mask) : (x & ~mask);
 }
 
-void apply_single_qubit_inplace(double complex *state, int nqubits, int t, double complex g[4]) {
+void apply_single_qubit_inplace(float complex *state, int nqubits, int t, float complex g[4]) {
     uint64_t size = 1ULL << nqubits;
     uint64_t bit = 1ULL << (nqubits - t - 1);
 
@@ -71,15 +71,15 @@ void apply_single_qubit_inplace(double complex *state, int nqubits, int t, doubl
             uint64_t i0 = i + r;
             uint64_t i1 = i0 + bit; // Representation binaire pour b_k = 1
             
-            double complex a0 = state[i0];
-            double complex a1 = state[i1];
+            float complex a0 = state[i0];
+            float complex a1 = state[i1];
             
             state[i0] = g[0] * a0 + g[1] * a1;
             state[i1] = g[2] * a0 + g[3] * a1;
         }
     }
 }
-void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1, double complex G[16]) {
+void apply_two_qubit_inplace(float complex *state, int nqubits, int q0, int q1, float complex G[16]) {
     assert(q0 != q1);
     if(q1 < q0) {int temp = q1; q1 = q0; q0 = temp;}
 
@@ -101,10 +101,10 @@ void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1,
                 uint64_t i10 = i00 + bit1; // q1=1 q0=0
                 uint64_t i11 = i10 + bit0; // q1=1 q0=1
 
-                double complex v00 = state[i00];
-                double complex v01 = state[i01];
-                double complex v10 = state[i10];
-                double complex v11 = state[i11];
+                float complex v00 = state[i00];
+                float complex v01 = state[i01];
+                float complex v10 = state[i10];
+                float complex v11 = state[i11];
 
                 // multiply: new = G * vec([v00,v01,v10,v11])
                 state[i00] = G[0]*v00 + G[1]*v01 + G[2]*v10 + G[3]*v11;
@@ -115,7 +115,7 @@ void apply_two_qubit_inplace(double complex *state, int nqubits, int q0, int q1,
         }
     }
 }
-void apply_controlled_u_inplace(double complex *state, int nqubits, int c, int t, double complex U[4]) {
+void apply_controlled_u_inplace(float complex *state, int nqubits, int c, int t, float complex U[4]) {
     uint64_t size = 1ULL << nqubits;
     uint64_t control = 1ULL << (nqubits - c - 1);
     uint64_t target = 1ULL << (nqubits - t - 1);
@@ -128,8 +128,8 @@ void apply_controlled_u_inplace(double complex *state, int nqubits, int c, int t
             uint64_t i0 = base; // Control = 1, Target = 0
             uint64_t i1 = base + target; // Control = 1, Target = 1
 
-            double complex a0 = state[i0];
-            double complex a1 = state[i1];
+            float complex a0 = state[i0];
+            float complex a1 = state[i1];
             
             state[i0] = U[0] * a0 + U[1] * a1;
             state[i1] = U[2] * a0 + U[3] * a1;
@@ -156,11 +156,11 @@ uint64_t replace_subindex(uint64_t index, int *targets, int k, int nqbits, uint6
     return index;
 }
 
-void apply_custom_inplace(double complex *state, int nqbits, int *targets, int k, double complex *U) {
+void apply_custom_inplace(float complex *state, int nqbits, int *targets, int k, float complex *U) {
     uint64_t dim = 1ULL << nqbits;
     uint64_t subdim = 1ULL << k;
 
-    double complex *new_state = calloc_custom(dim, sizeof(double complex));
+    float complex *new_state = calloc_custom(dim, sizeof(float complex));
 
     for (uint64_t i = 0; i < dim; i++) {
         uint64_t row = extract_subindex(i, targets, k, nqbits);
@@ -171,11 +171,11 @@ void apply_custom_inplace(double complex *state, int nqbits, int *targets, int k
         }
     }
 
-    memcpy(state, new_state, dim * sizeof(double complex));
+    memcpy(state, new_state, dim * sizeof(float complex));
     free_custom(new_state);
 }
 
-int measure_qubit_inplace(double complex *state, int nqubits, int t) {
+int measure_qubit_inplace(float complex *state, int nqubits, int t) {
     uint64_t size = 1ULL << nqubits;
     uint64_t bit = 1ULL << (nqubits - t - 1);
 

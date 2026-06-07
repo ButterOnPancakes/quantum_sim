@@ -23,7 +23,7 @@ Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase) {
     return gate;
 }
 // Mat size must be 2^nb_qbits !
-Gate *create_custom_gate(int nb_qbits, int *t, double complex *mat, char *label) {
+Gate *create_custom_gate(int nb_qbits, int *t, float complex *mat, char *label) {
     Gate *gate = malloc_custom(sizeof(Gate));
     gate->class = CUSTOM;
     gate->gate.custom.nb_qbits = nb_qbits;

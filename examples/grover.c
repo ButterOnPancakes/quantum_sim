@@ -21,21 +21,21 @@ const int nb_marked = 1;
 int targets[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
 /* Size 256 x 256 in a single line so 65536 */
-double complex *ORACLE_MAT;
-double complex *S0_MAT;
+float complex *ORACLE_MAT;
+float complex *S0_MAT;
 
 void init_matrices(int n) {
     unsigned long size = 1 << n;
 
     /* Init S0 = 2|0><0| - In */
-    S0_MAT = calloc_custom(size * size, sizeof(double complex));
+    S0_MAT = calloc_custom(size * size, sizeof(float complex));
     for(unsigned long i = 0; i < size; i++) {
         S0_MAT[i * size + i] = -1.0;
     }
     S0_MAT[0] = 1.0;
 
     /* Init Oracle */
-    ORACLE_MAT = calloc_custom(size * size, sizeof(double complex));
+    ORACLE_MAT = calloc_custom(size * size, sizeof(float complex));
     for(unsigned long i = 0; i < size; i++) {
         ORACLE_MAT[i * size + i] = 1.0;
     }

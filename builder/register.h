@@ -11,7 +11,7 @@ int cregister_get_num_bits(const ClassicalRegister *cregister);
 int cregister_get_bit(const ClassicalRegister *cregister, int index);
 
 int qregister_get_num_qubits(const QuantumRegister *qregister);
-double complex *qregister_get_statevector(const QuantumRegister *qregister);
+float complex *qregister_get_statevector(const QuantumRegister *qregister);
 
 ClassicalRegister *cregister_create(int nbits);
 void cregister_print(FILE *channel, ClassicalRegister *cregister);

@@ -17,7 +17,7 @@ typedef struct Gate Gate;
 Gate *create_unitary_gate(int t, SingleBitGate tg, double phase);
 Gate *create_control_gate(int c, int t, SingleBitGate tg, double phase);
 // Mat size must be 2^nb_qbits !
-Gate *create_custom_gate(int nb_qbits, int *t, double complex *mat, char *label);
+Gate *create_custom_gate(int nb_qbits, int *t, float complex *mat, char *label);
 Gate *create_measure(int qbit, int cbit);
 
 #endif

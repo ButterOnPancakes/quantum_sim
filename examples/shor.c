@@ -110,7 +110,7 @@ void build_shor_generalized(QuantumCircuit *circuit, int N, int a, int n_countin
         // The gate acts on 1 control bit + n_target bits
         int gate_qubits = 1 + n_target;
         int dim = 1 << gate_qubits;
-        double complex *mat = calloc_custom(dim * dim, sizeof(double complex));
+        float complex *mat = calloc_custom(dim * dim, sizeof(float complex));
 
         for (int i = 0; i < dim; i++) {
             int ctrl = (i >> n_target) & 1;

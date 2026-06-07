@@ -11,7 +11,7 @@
 #include <string.h>
 #include <omp.h>
 
-double complex SWAP[16] = {
+float complex SWAP[16] = {
     1, 0, 0, 0,
     0, 0, 1, 0,
     0, 1, 0, 0,

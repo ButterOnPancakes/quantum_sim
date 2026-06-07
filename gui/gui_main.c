@@ -192,7 +192,7 @@ void ParseAndAddCustomGate(QuantumCircuit *qc) {
     long required_entries = 1;
     for(int i=0; i<q_count; i++) required_entries *= 4;
     
-    double complex *mat = malloc_custom(required_entries * sizeof(double complex));
+    float complex *mat = malloc_custom(required_entries * sizeof(float complex));
     
     char mBuf[2048];
     strncpy(mBuf, customMatrix, 2047);
@@ -295,7 +295,7 @@ void DrawResults(QuantumCircuit *qc, QuantumRegister* qreg) {
     int col_x = winX + 40;
 
     for (int i = 0; i < num_states; i++) {
-        double complex amp = qreg->statevector[i];
+        float complex amp = qreg->statevector[i];
         double prob = creal(amp)*creal(amp) + cimag(amp)*cimag(amp);
 
         if (prob > 0.0001) {
