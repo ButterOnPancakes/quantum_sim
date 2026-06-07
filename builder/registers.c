@@ -53,7 +53,7 @@ void cregister_print(ClassicalRegister *creg) {
 QuantumRegister *qregister_create(int nb_qbits) {
     int64 dim = 1ULL << nb_qbits;
     QuantumRegister *qreg = malloc_custom(sizeof(QuantumRegister));
-    qreg->array = calloc_custom(dim, sizeof(double complex));
+    qreg->array = calloc_custom(dim, sizeof(float complex));
     assert(qreg->array != NULL);
     qreg->array[0] = 1.0;
     qreg->size = dim;
@@ -76,7 +76,7 @@ void qregister_print(QuantumRegister *qreg) {
     }
 }
 
-double complex qregister_get_amplitude(QuantumRegister *qreg, int64 index) {
+float complex qregister_get_amplitude(QuantumRegister *qreg, int64 index) {
     assert(qreg != NULL && index < qreg->size);
     return qreg->array[index];
 }
@@ -84,7 +84,7 @@ int qregister_get_nb_qbits(QuantumRegister *qreg) {
     assert(qreg != NULL);
     return qreg->nb_qbits;
 }
-void qregister_set_amplitude(QuantumRegister *qreg, int64 index, double complex value) {
+void qregister_set_amplitude(QuantumRegister *qreg, int64 index, float complex value) {
     assert(qreg != NULL && index < qreg->size);
     qreg->array[index] = value;
 }
@@ -155,7 +155,7 @@ QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2) {
     QuantumRegister* qregister = malloc_custom(sizeof(QuantumRegister));
     qregister->nb_qbits = q1->nb_qbits + q2->nb_qbits;
     qregister->size = 1ULL << qregister->nb_qbits;
-    qregister->array = malloc_custom(qregister->size * sizeof(double complex));
+    qregister->array = malloc_custom(qregister->size * sizeof(float complex));
 
     int64 s1 = 1ULL << q1->nb_qbits;
     int64 s2 = 1ULL << q2->nb_qbits;

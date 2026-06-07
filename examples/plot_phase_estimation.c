@@ -1,6 +1,8 @@
 #include "../../builder/registers.h"
 #include "../../simulator/operations.h"
 
+#include "order_finding.h"
+
 #include "../../utils/utils.h"
 
 #include <stdio.h>

@@ -7,7 +7,7 @@
 #include "../utils/utils.h"
 
 struct qregister_s {
-    double complex* array;
+    float complex* array;
     int64 size;
     int nb_qbits;
 };

@@ -58,8 +58,8 @@ int64 power_mod(int64 base, int64 exp, int64 mod) {
     int64 res = 1;
     base %= mod;
     while (exp > 0) {
-        if (exp % 2 == 1) res = (int64)(((__int128)res * base) % mod);
-        base = (int64)(((__int128)base * base) % mod);
+        if (exp % 2 == 1) res = (int64)((res * base) % mod);
+        base = (int64)((base * base) % mod);
         exp /= 2;
     }
     return res;
@@ -127,7 +127,7 @@ void plot_qregister(QuantumRegister *qreg, int m, int n, char* name) {
     pclose(graph);
 }
 
-int64 order_finding_c(int m, int n, int64 a, int64 N) {
+int64 order_finding_c(FILE *graph, int m, int n, int64 a, int64 N) {
     QuantumRegister *fst_reg = qregister_create(m);
     QuantumRegister *snd_reg = qregister_create(n);
     qregister_set_number(snd_reg, 1);
@@ -138,12 +138,23 @@ int64 order_finding_c(int m, int n, int64 a, int64 N) {
     apply_superposition(qreg, m);
     apply_oracle(qreg, m, n, a, N);
     ClassicalRegister *snd_creg = measure_snd(qreg, m, n);
-    
-    plot_qregister(qreg, m, n, "before_QFT");
-    
     apply_c_iqft(qreg, m);
 
-    plot_qregister(qreg, m, n, "after_QFT");
+    double* amplitudes = calloc(1 << (m + n), sizeof(double));
+    for(int64 i = 0; i < 1ULL << (m + n); i++) {
+        double proba = cabs(qregister_get_amplitude(qreg, i))*cabs(qregister_get_amplitude(qreg, i));
+        int64 index = find_order_cfa(i, m, a, N) % N;
+        amplitudes[index] += proba;
+    }
+    for(int64 i = 0; i < 1ULL << m; i++) {
+        if (amplitudes[i] > 1e-6) {
+            fprintf(graph, "%lu %lf\n", i, amplitudes[i]);
+        }
+    }
+    free(amplitudes);
+
+    fprintf(graph, "e\n");
+
     ClassicalRegister *fst_creg = measure_fst(qreg, m);
     
     int64 y = cregister_calc_number(fst_creg);
@@ -154,34 +165,41 @@ int64 order_finding_c(int m, int n, int64 a, int64 N) {
     return y;
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     srand(time(NULL));
-    if(argc < 2) return EXIT_FAILURE;
-    int64 N = (int64)atoll(argv[1]);
-    
+    int N = 31, a = 5;
+
     int n = (int)ceil(log2(N));
-    int m = n;
+    int minPrec = n, maxPrec = 3 * n;
 
-    int amount = 1000;
-    int count = 0;
-    for(int x = 0; x < amount; x++) {
-        int64 a = N;
-        while(gcd(a, N) != 1) {
-            a = rand()%(N-1)+1;
-        }
+    FILE *graph = popen("gnuplot", "w");
+    fprintf(graph, "set terminal pngcairo size 800,600\n"); // Meilleure qualité
+    fprintf(graph, "set output 'logs/shor_precision_narrowing.png'\n");
+    fprintf(graph, "set title 'Convergence de la probabilité de r selon n'\n");
 
-        int64 y = order_finding_c(m, n, a, N);
-        int64 r = find_order_cfa(y, m, a, N);
-
-        //printf("a = %ld ; N = %ld ; y = %ld ; y/(2^m) = %lf\n", a, N, y, (double)y / (1ULL << m));
-        if (r > 0) {
-            count++;
-            printf("Successfully found order a = %ld, r = %ld\n", a, r);
-            return EXIT_SUCCESS;
-        }
-        //else printf("Continued fraction failed to find order from measurement %ld\n", y);
+    fprintf(graph, "set xlabel 'Valeur de r possible'\n");
+    fprintf(graph, "set xrange [0:%d]\n", N);
+    fprintf(graph, "set ylabel 'Probabilité P(r)'\n");
+    fprintf(graph, "set yrange [0:1]\n");
+    
+    // Style de ligne et lissage
+    fprintf(graph, "set style data lines\n");
+    
+    int steps = 0;
+    for (int m = minPrec; m <= maxPrec; m ++) steps++;
+    
+    fprintf(graph, "plot ");
+    for(int i = 0; i < steps; i++) {
+        int current_m = minPrec + i;
+        fprintf(graph, "'-' with linespoints title '%d qubits'%s", 
+            current_m, (i < steps - 1) ? ", " : "");
+    }
+    fprintf(graph, "\n");
+    
+    for(int m = minPrec; m <= maxPrec; m ++) {
+        order_finding_c(graph, m, n, a, N);
     }
 
-    printf("Proba : %lf\n", count / (double) amount);
+    pclose(graph);
     return EXIT_SUCCESS;
 }

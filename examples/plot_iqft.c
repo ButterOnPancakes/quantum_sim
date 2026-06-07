@@ -84,7 +84,7 @@ void plot_qregister(QuantumRegister *qreg, char* name, char* title, char *xaxis)
 
     fprintf(graph, "set xlabel '%s'\n", xaxis);
     fprintf(graph, "set xrange [0:%llu]\n", 1ULL << m);
-    fprintf(graph, "set ylabel 'Probability of obtaining it'\n");
+    fprintf(graph, "set ylabel 'Probabilité'\n");
     fprintf(graph, "set yrange [0:1]\n");
 
     fprintf(graph, "set style data histograms\n"); fprintf(graph, "set style fill solid 0.5\n");
@@ -110,7 +110,7 @@ void plot_spectrum(QuantumRegister *qreg, int64 a, int64 N, char* name, char* ti
 
     fprintf(graph, "set xlabel '%s'\n", xaxis);
     fprintf(graph, "set xrange [0:%d]\n", 16);
-    fprintf(graph, "set ylabel 'Probability of obtaining it'\n");
+    fprintf(graph, "set ylabel 'Probabilité'\n");
     fprintf(graph, "set yrange [0:1]\n");
 
     fprintf(graph, "set style data histograms\n"); fprintf(graph, "set style fill solid 0.5\n");
@@ -136,10 +136,15 @@ void plot_spectrum(QuantumRegister *qreg, int64 a, int64 N, char* name, char* ti
 
 
 int main() {
-    int N = 31, a = 5;
-    int x = 1, r = 3;
-    int m = 5;
+    int N = 15, a = 7;
+    int x = 7, r = 4;
+    int m = 8;
     QuantumRegister *qreg = qregister_create(m);
+    
+    for(int i = 0; i < m; i++) {
+        apply_gate_hadamard(qreg, i);
+    }
+
     for(int i = 0; i < 1 << m; i++) {
         if((i - x) % r == 0) {
             printf("%d\n",i);
@@ -151,10 +156,10 @@ int main() {
     }
     qregister_normalise(qreg);
 
-    plot_qregister(qreg, "before_iqft", "Before IQFT (N = 31, a = 5, x_0 = 2, r = 3)", "Value obtainable (x_0 + lr)");
+    plot_qregister(qreg, "before_iqft", "Avant QFT", "Etat");
     iqft(qreg);
-    plot_qregister(qreg, "after_iqft", "After IQFT (N = 31, a = 5, x_0 = 2, r = 3)", "Value obtainable (y = 2^m k/r)");
-    plot_spectrum(qreg, a, N, "after_traitement", "After Traitement (N = 31, a = 5, x_0 = 2, r = 3)", "r obtainable");
+    plot_qregister(qreg, "after_iqft", "Après QFT", "Etat");
+    plot_spectrum(qreg, a, N, "after_traitement", "Après traitement", "Valeur de r");
 
     qregister_free(qreg);
 

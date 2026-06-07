@@ -35,8 +35,8 @@ void apply_gate_hadamard(QuantumRegister *qreg, int qbit) {
             int64 i0 = i;
             int64 i1 = i0 | bit;
             
-            double complex a0 = qreg->array[i0];
-            double complex a1 = qreg->array[i1];
+            float complex a0 = qreg->array[i0];
+            float complex a1 = qreg->array[i1];
             
             qreg->array[i0] = (a0 + a1) * inv_sqrt2;
             qreg->array[i1] = (a0 - a1) * inv_sqrt2;
@@ -55,7 +55,7 @@ void apply_gate_x(QuantumRegister *qreg, int qbit) {
             int64 i0 = i;
             int64 i1 = i0 | bit;
             
-            double complex tmp = qreg->array[i0];
+            float complex tmp = qreg->array[i0];
             qreg->array[i0] = qreg->array[i1];
             qreg->array[i1] = tmp;
         }
@@ -73,8 +73,8 @@ void apply_gate_y(QuantumRegister *qreg, int qbit) {
             int64 i0 = i;
             int64 i1 = i0 | bit;
             
-            double complex a0 = qreg->array[i0];
-            double complex a1 = qreg->array[i1];
+            float complex a0 = qreg->array[i0];
+            float complex a1 = qreg->array[i1];
             qreg->array[i0] = -I * a1; 
             qreg->array[i1] =  I * a0;
         }
@@ -96,7 +96,7 @@ void apply_gate_z(QuantumRegister *qreg, int qbit) {
 void apply_gate_phase(QuantumRegister *qreg, int qbit, double phase) {
     int64 size = 1ULL << qreg->nb_qbits;
     int64 bit = 1ULL << qbit;
-    double complex expo = cexp(I * phase);
+    float complex expo = cexp(I * phase);
     
     #if USE_OMP
     #pragma omp parallel for
@@ -123,7 +123,7 @@ void apply_cnot(QuantumRegister *qreg, int c, int t) {
             int64 i0 = i;
             int64 i1 = i | t_bit;
             
-            double complex tmp = qreg->array[i0];
+            float complex tmp = qreg->array[i0];
             
             qreg->array[i0] = qreg->array[i1];
             qreg->array[i1] = tmp;
@@ -135,7 +135,7 @@ void apply_controlled_rotation(QuantumRegister *qreg, int c, int t, double phase
     int64 c_bit = 1ULL << c;
     int64 t_bit = 1ULL << t;
 
-    double complex expo = cexp(I * phase);
+    float complex expo = cexp(I * phase);
 
     // Act on control_bit = 1 and target_bit = 1
 
@@ -161,7 +161,7 @@ void apply_swap(QuantumRegister *qreg, int q0, int q1) {
         // We act when bit q0=1 and q1=0 to perform the swap once
         if ((i & b0) && !(i & b1)) {
             int64 i_01 = (i & ~b0) | b1; // This is the state where bits are swapped
-            double complex tmp = qreg->array[i];
+            float complex tmp = qreg->array[i];
             qreg->array[i] = qreg->array[i_01];
             qreg->array[i_01] = tmp;
         }
@@ -202,7 +202,7 @@ void apply_oracle_ancilla(QuantumRegister *qreg, int start_qbit, int nb_qbits, i
                 int64 i0 = i;
                 int64 i1 = i | ancilla_bit;
 
-                double complex temp = qreg->array[i0];
+                float complex temp = qreg->array[i0];
                 qreg->array[i0] = qreg->array[i1];
                 qreg->array[i1] = temp;
             }
@@ -219,14 +219,14 @@ void apply_diffusion(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
 
     for (int64 b = 0; b < num_blocks; b++) {
         int64 base_idx = spread_bits(b, 0, start_qbit, nb_qbits);
-        double complex sum_amps = 0;
+        float complex sum_amps = 0;
         
         // Pass 1: Local Mean
         for (int64 i = 0; i < sub_size; i++) {
             sum_amps += qreg->array[base_idx | (i << start_qbit)];
         }
         
-        double complex mean = sum_amps / (double complex)sub_size;
+        float complex mean = sum_amps / (float complex)sub_size;
 
         // Pass 2: Inversion
         for (int64 i = 0; i < sub_size; i++) {
@@ -247,7 +247,7 @@ void apply_qft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     int64 sub_size = 1ULL << nb_qbits;
     int64 num_blocks = total_size >> nb_qbits;
 
-    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    float complex *buffer = malloc_custom(sub_size * sizeof(float complex));
     if (!buffer) return;
 
     for (int64 b = 0; b < num_blocks; b++) {
@@ -274,7 +274,7 @@ void apply_iqft(QuantumRegister *qreg, int start_qbit, int nb_qbits) {
     int64 sub_size = (int64)1ULL << nb_qbits;
     int64 num_blocks = total_size >> nb_qbits;
 
-    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    float complex *buffer = malloc_custom(sub_size * sizeof(float complex));
     if (!buffer) return;
 
     for (int64 b = 0; b < num_blocks; b++) {
@@ -304,7 +304,7 @@ void apply_prod(QuantumRegister *qreg, int start_qbit, int nb_qbits, int64 a, in
 
     int64 v = get_inverse(a, N);
     
-    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    float complex *buffer = malloc_custom(sub_size * sizeof(float complex));
     if (!buffer) return;
 
     for (int64 b = 0; b < num_blocks; b++) {
@@ -333,7 +333,7 @@ void apply_controlled_prod_exp(QuantumRegister *qreg, int c, int start_qbit, int
     int64 u = get_inverse(a, N);
     int64 v = fexp_mod(u, k, N);
     
-    double complex *buffer = malloc_custom(sub_size * sizeof(double complex));
+    float complex *buffer = malloc_custom(sub_size * sizeof(float complex));
     if (!buffer) return;
 
     for (int64 b = 0; b < num_blocks; b++) {

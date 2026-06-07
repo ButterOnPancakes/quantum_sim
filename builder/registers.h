@@ -23,9 +23,9 @@ void cregister_print(ClassicalRegister *creg);
 QuantumRegister *qregister_create(int nb_qbits);
 void qregister_free(QuantumRegister *qreg);
 
-double complex qregister_get_amplitude(QuantumRegister *qreg, int64 index);
+float complex qregister_get_amplitude(QuantumRegister *qreg, int64 index);
 int qregister_get_nb_qbits(QuantumRegister *qreg);
-void qregister_set_amplitude(QuantumRegister *qreg, int64 index, double complex value);
+void qregister_set_amplitude(QuantumRegister *qreg, int64 index, float complex value);
 void qregister_set_number(QuantumRegister *qreg, int j);
 
 double qregister_calc_norm(QuantumRegister *qreg);
