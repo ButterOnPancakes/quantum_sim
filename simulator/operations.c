@@ -1,6 +1,5 @@
 #include "operations.h"
 #include "../builder/registers.h"
-#include "../builder/registers_internal.h"
 #include "../utils/utils.h"
 #include "../utils/fft.h"
 
@@ -15,14 +14,6 @@
 
 #define USE_OMP true
 
-/*
- * Per-gate OpenMP parallelism is intentionally disabled here.
- * The thread-fork/join overhead dominates for individual gate loops.
- * Coarse-grained parallelism is applied at the circuit level instead
- * (see order_finding.c: #pragma omp parallel for over phase-estimation runs).
- */
-
-// 1-qbit gate, issu de opti_version
 void apply_gate_hadamard(QuantumRegister *qreg, int qbit) {
     int64 size = 1ULL << qreg->nb_qbits;
     int64 bit = 1ULL << qbit; // Little Endian: bit 0 is the 2^0 position
@@ -110,7 +101,6 @@ void apply_gate_phase(QuantumRegister *qreg, int qbit, double phase) {
     }
 }
 
-// 2-qbit gates, issu de opti_version
 void apply_cnot(QuantumRegister *qreg, int c, int t) {
     int64 size = 1ULL << qreg->nb_qbits;
     int64 c_bit = 1ULL << c;

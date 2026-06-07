@@ -5,9 +5,16 @@
 
 #include "../utils/utils.h"
 
-typedef struct qregister_s QuantumRegister;
+typedef struct {
+    float complex* array;
+    int64 size;
+    int nb_qbits;
+} QuantumRegister;
 
-typedef struct cregister_s ClassicalRegister;
+typedef struct {
+    bool* array;
+    int size;
+} ClassicalRegister;
 
 // ---- Classical Registers ----
 ClassicalRegister *cregister_create(int size);
