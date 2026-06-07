@@ -70,7 +70,7 @@ void graph_histogram(graph g, double *x, double *y, int n, const char *title) {
     fprintf(g, "e\n");
     fflush(g);
 }
-void graph_statevector(graph g, double complex *statevector, int n) {
+void graph_statevector(graph g, float complex *statevector, int n) {
     if (g == NULL) {
         return;
     }

@@ -14,7 +14,7 @@
 
 #include <time.h>
 
-void create_bell_state(double complex* zero_state, int n) {
+void create_bell_state(float complex* zero_state, int n) {
     QuantumCircuit *qc = circuit_create(n);
 
     add_single_qbit_gate(qc, 0, H);
@@ -33,12 +33,12 @@ void test_teleportation() {
     printf("\n--------------------- Teleportation Circuit ----------------------\n\n");
 
     // Inits the circuit
-    double complex transmitted[2] = {1, 0};
-    double complex bell_state[4] = {1, 0, 0, 0};
+    float complex transmitted[2] = {1, 0};
+    float complex bell_state[4] = {1, 0, 0, 0};
 
     create_bell_state(bell_state, 2);
 
-    double complex *final_state = fuse_qbits(transmitted, 1, bell_state, 2);
+    float complex *final_state = fuse_qbits(transmitted, 1, bell_state, 2);
 
     // Alice part
     QuantumCircuit *alice_qc = circuit_create(3);

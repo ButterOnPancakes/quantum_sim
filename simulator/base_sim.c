@@ -16,7 +16,7 @@ bool collapse = true;
 typedef enum { IDENTITY, XGATE, ZGATE, HADAMARD, PROJ0, PROJ1 } Operator;
 
 typedef struct {
-    double complex matrix[2][2];
+    float complex matrix[2][2];
 } GateMatrix;
 
 Operator get_corresponding_operator(GateType gate, int value) {
@@ -145,7 +145,7 @@ void reset_gate_array(Operator *gates, int n) {
     }
 }
 
-double circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat, int **bits_out) {
+double circuit_execute(QuantumCircuit *circuit, float complex *statevector_mat, int **bits_out) {
     double t0 = now_seconds();
 
     int n = circuit->nb_qbits;

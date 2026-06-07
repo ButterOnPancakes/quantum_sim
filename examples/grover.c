@@ -31,7 +31,7 @@ bool is_marked(int *t, int len) {
 int main() {
     srand(time(NULL));
     int N = 1 << n;
-    double complex *statevector = calloc(N * 1, sizeof(double complex));
+    float complex *statevector = calloc(N * 1, sizeof(float complex));
     statevector[0] = 1 + 0 * I;
 
     int l = (int) floor(M_PI / (4 * asin(sqrt((double) nb_marked / N))));

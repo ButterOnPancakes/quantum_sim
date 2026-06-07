@@ -19,8 +19,8 @@ typedef struct {
     List* gates;
 } QuantumCircuit;
 
-double complex* init_zero_state(int nqubits);
-double complex* fuse_qbits(double complex *q1, int n1, double complex *q2, int n2);
+float complex* init_zero_state(int nqubits);
+float complex* fuse_qbits(float complex *q1, int n1, float complex *q2, int n2);
 
 QuantumCircuit *circuit_create(int n_qbits);
 void circuit_free(QuantumCircuit *circuit);

@@ -5,6 +5,6 @@
 
 #include <complex.h>
 
-double circuit_execute(QuantumCircuit *circuit, double complex *statevector_mat, int **bits_out);
+double circuit_execute(QuantumCircuit *circuit, float complex *statevector_mat, int **bits_out);
 
 #endif

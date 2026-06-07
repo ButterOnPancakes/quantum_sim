@@ -53,7 +53,7 @@ Matrix *proj1_tensored(int k, int n) {
 }
 
 int main() {
-    Matrix *proj = matrix_of_array(2, 2, (double complex[2][2]){
+    Matrix *proj = matrix_of_array(2, 2, (float complex[2][2]){
         {0, 0},
         {0, 1}
     });

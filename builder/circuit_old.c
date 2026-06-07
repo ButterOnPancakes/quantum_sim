@@ -11,27 +11,27 @@
 #include "../utils/list.h"
 #include "../utils/utils.h"
 
-double complex *state_alloc(int nqubits) {
+float complex *state_alloc(int nqubits) {
     uint64_t dim = 1ULL << nqubits;
-    double complex *s = aligned_alloc_64(dim * sizeof(double complex));
+    float complex *s = aligned_alloc_64(dim * sizeof(float complex));
     if (!s) {
         // fallback
-        s = malloc(dim * sizeof(double complex));
+        s = malloc(dim * sizeof(float complex));
     }
     return s;
 }
-double complex* init_zero_state(int nqubits) {
-    double complex *s = state_alloc(nqubits);
+float complex* init_zero_state(int nqubits) {
+    float complex *s = state_alloc(nqubits);
     uint64_t dim = 1ULL << nqubits;
     for (uint64_t i = 0; i < dim; ++i) s[i] = 0.0 + 0.0*I;
     s[0] = 1.0 + 0.0*I;
     return s;
 }
 
-double complex* fuse_qbits(double complex *q1, int n1, double complex *q2, int n2) {
+float complex* fuse_qbits(float complex *q1, int n1, float complex *q2, int n2) {
     uint64_t s1 = 1 << n1;
     uint64_t s2 = 1 << n2;
-    double complex *result = state_alloc(n1 + n2);
+    float complex *result = state_alloc(n1 + n2);
     for(uint64_t i = 0; i < s1; i++) {
         for(uint64_t j = 0; j < s2; j++) {
             result[s2 * i + j] = q1[i] * q2[j];
