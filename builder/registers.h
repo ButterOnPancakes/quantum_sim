@@ -1,7 +1,9 @@
+#ifndef REGISTERS_H
+#define REGISTERS_H
+
 #include <complex.h>
 #include <stdint.h>
 #include <stdbool.h>
-
 
 #include "../utils/utils.h"
 
@@ -43,3 +45,5 @@ double qregister_measure(QuantumRegister *qreg, int qbit, ClassicalRegister *cre
 QuantumRegister *qregister_fuse(QuantumRegister *q1, QuantumRegister *q2);
 
 void qregister_print(QuantumRegister *qreg);
+
+#endif
