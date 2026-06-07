@@ -28,12 +28,12 @@ Node *calc_product(Node *left, Node *right) {
     assert(left->dim == right->dim);
     uint64_t dim = left->dim;
     
-    double complex *new_mat = calloc_custom(dim * dim, sizeof(double complex));
+    float complex *new_mat = calloc_custom(dim * dim, sizeof(float complex));
     assert(new_mat != NULL);
     
     for (uint64_t i = 0; i < dim; i++) {
         for (uint64_t k = 0; k < dim; k++) {
-            double complex l_val = left->data.leaf.mat[MAT_IDX(i, k, dim)];
+            float complex l_val = left->data.leaf.mat[MAT_IDX(i, k, dim)];
             if (cabs(l_val) > 1e-15) { // Zero imprecision check
                 for (uint64_t j = 0; j < dim; j++) {
                     new_mat[MAT_IDX(i, j, dim)] += l_val * right->data.leaf.mat[MAT_IDX(k, j, dim)];
@@ -57,7 +57,7 @@ bool is_identity(Node *node) {
         uint64_t dim = node->dim;
         for (uint64_t i = 0; i < dim; i++) {
             for (uint64_t j = 0; j < dim; j++) {
-                double complex val = node->data.leaf.mat[MAT_IDX(i, j, dim)];
+                float complex val = node->data.leaf.mat[MAT_IDX(i, j, dim)];
                 if (i == j) {
                     if (cabs(val - 1.0) > 1e-15) return false;
                 } else {

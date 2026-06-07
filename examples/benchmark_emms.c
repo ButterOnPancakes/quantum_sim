@@ -11,68 +11,50 @@
 #include <string.h>
 
 int main() {
+    srand(time(NULL));
+    
     int max_qubits = 30;
     int step = 1;
     int min_qubits = 2;
-    
-    int num_points = (max_qubits - min_qubits) / step + 1;
-    double *x_qubits = malloc_custom(num_points * sizeof(double));
-    double *y_none = malloc_custom(num_points * sizeof(double));
-    double *y_full = malloc_custom(num_points * sizeof(double));
-    assert(x_qubits != NULL && y_none != NULL && y_full != NULL);
+    double ratio = 1 / 2.;
+
+    int nb_gates = 20;
+
+    printf("Ratio number of CNOT / number of gates : %lf\n", ratio);
+    printf("Size of a node in memory : %lu\n", sizeof(Node));
 
     printf("EMMS Entanglement Analysis (GHZ State creation)\n");
-    printf("%-8s | %-15s | %-15s | %-10s | %-8s\n", "Qubits", "None (Nodes)", "Full (Nodes)", "Depth", "Time");
-    printf("---------+-----------------+-----------------+------------+--------\n");
-
-    int idx = 0;
+    printf("%s, %s, %s, %s\n", "Qubits", "Memory Not Optimised", "Memory after optimisation", "Memory of naive");
     for (int n_qubits = min_qubits; n_qubits <= max_qubits; n_qubits += step) {
-        uint64_t dim = 1 << n_qubits;
         QuantumCircuit *qc = circuit_create(n_qubits);
         
-        circuit_add_h_gate(qc, 0);
 
-        for (int i = 0; i < n_qubits - 1; i++) {
-            circuit_add_cnot_gate(qc, i, i+1);
+        for (int i = 0; i < nb_gates; i++) {
+            if(rand() / (double) RAND_MAX < ratio) {
+                circuit_add_cnot_gate(qc, 0, 1);
+            }
+            else {
+                circuit_add_h_gate(qc, 0);
+            }
         }
 
-        y_none[idx] = (double)count_nodes(qc->root);
+        int mem_no_opti = count_nodes(qc->root) * sizeof(Node);
 
         Node *optimized = copy_node(qc->root);
         optimized = full_optimize(optimized);
-        y_full[idx] = (double)count_nodes(optimized);
-        int depth = tree_depth(optimized);
+        
+        int mem_opti = count_nodes(optimized) * sizeof(Node);
+        
+        long long unsigned mem_naif = (1 << n_qubits) * (nb_gates + 4 * rand() / (double) RAND_MAX);
 
         circuit_optimize(qc);
-        double complex *sv = calloc_custom(dim, sizeof(double complex));
-        assert(sv != NULL);
-        sv[0] = 1;
 
-        double start = now_seconds();
-        emms_compute_statevector(qc, sv, dim);
-        double end = now_seconds();
-
-        free(sv);
-
-        x_qubits[idx] = (double)n_qubits;
-        printf("%-8d | %-15.0f | %-15.0f | %-10d | %-8f\n", 
-               n_qubits, y_none[idx], y_full[idx], depth, end - start);
+        printf("%d, %d, %d, %llu\n", 
+               n_qubits, mem_no_opti, mem_opti, mem_naif);
 
         free_node(optimized, true);
         circuit_free(qc);
-        idx++;
     }
-    
-    graph g = graph_create("EMMS Entanglement Benchmark", "Number of Qubits", "Number of Tree Nodes");
-    if (g) {
-        graph_plot_comparison(g, x_qubits, y_none, y_full, idx, "Unoptimized", "Optimized");
-        graph_free(g);
-        printf("\nEntanglement plot saved to logs/EMMS_Entanglement_Benchmark.png\n");
-    }
-
-    free(x_qubits);
-    free(y_none);
-    free(y_full);
 
     return 0;
 }

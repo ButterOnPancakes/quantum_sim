@@ -21,7 +21,7 @@ struct node_s {
 
     union {
         struct {
-            double complex *mat;
+            float complex *mat;
         } leaf;
 
         struct {
@@ -32,8 +32,8 @@ struct node_s {
 };
 typedef struct node_s Node;
 
-Node *create_leaf(double complex *mat, int nb_qbits);
-Node *create_1q_leaf(double complex a11, double complex a12, double complex a21, double complex a22);
+Node *create_leaf(float complex *mat, int nb_qbits);
+Node *create_1q_leaf(float complex a11, float complex a12, float complex a21, float complex a22);
 Node *create_gate_layer(Node* gate_node, int total_qbits, int start_index);
 
 Node *create_sum(Node *left, Node *right);

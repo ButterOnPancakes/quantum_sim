@@ -15,7 +15,7 @@ Use : vector[k] = data[k * offset_factor]
 typedef struct {
     uint64_t data_size; //Malloc-ed size
     uint64_t vector_size; //Vector size
-    double complex *data;
+    float complex *data;
     uint64_t offset_factor;
 } Split;
 
@@ -24,7 +24,7 @@ Split malloc_split(Split split) {
     s.data_size = split.vector_size;
     s.vector_size = split.vector_size;
     s.offset_factor = 1;
-    s.data = malloc_custom(split.vector_size * sizeof(double complex));
+    s.data = malloc_custom(split.vector_size * sizeof(float complex));
     assert(s.data != NULL);
     return s;
 }
@@ -43,7 +43,7 @@ void apply_leaf(Node *node, Split vector, Split output) {
     assert(node != NULL && node->gt == LEAF && node->dim == vector.vector_size);
     assert(vector.data != output.data);
 
-    double complex *mat = node->data.leaf.mat; //mat[i * size + k]
+    float complex *mat = node->data.leaf.mat; //mat[i * size + k]
     for(uint64_t i = 0; i < vector.vector_size; i++) {
         output.data[i * output.offset_factor] = 0;
         for(uint64_t k = 0; k < node->dim; k++) {
@@ -142,7 +142,7 @@ void apply_node(Node *node, Split vector, Split output) {
     }
 }
 
-void emms_compute_statevector(QuantumCircuit *circuit, double complex* vector, uint64_t dim) {
+void emms_compute_statevector(QuantumCircuit *circuit, float complex* vector, uint64_t dim) {
     srand(time(NULL));
     assert(vector != NULL);
     assert(dim == (uint64_t) (1 << circuit->nb_qbits));

@@ -8,6 +8,6 @@
 /**
  * Computes the statevector output of the circuit
  */
-void emms_compute_statevector(QuantumCircuit *circuit, double complex* vector, uint64_t dim);
+void emms_compute_statevector(QuantumCircuit *circuit, float complex* vector, uint64_t dim);
 
 #endif

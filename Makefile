@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -W -Wall -pedantic 
-LDFLAGS = -lm #-lpthread -fopenmp
+LDFLAGS = -lm -lpthread -fopenmp
 
 BIN_DIR = bin
 

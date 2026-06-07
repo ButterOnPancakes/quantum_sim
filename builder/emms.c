@@ -9,7 +9,7 @@
 
 #include "../utils/utils.h"
 
-Node *create_leaf(double complex *mat, int nb_qbits) {
+Node *create_leaf(float complex *mat, int nb_qbits) {
     Node *node = malloc_custom(sizeof(Node));
     assert(node != NULL);
     node->nb_qbits = nb_qbits;
@@ -19,14 +19,14 @@ Node *create_leaf(double complex *mat, int nb_qbits) {
     node->is_identity = false;
     
     uint64_t total_elements = node->dim * node->dim;
-    node->data.leaf.mat = malloc_custom(total_elements * sizeof(double complex));
+    node->data.leaf.mat = malloc_custom(total_elements * sizeof(float complex));
     assert(node->data.leaf.mat != NULL);
-    memcpy(node->data.leaf.mat, mat, total_elements * sizeof(double complex));
+    memcpy(node->data.leaf.mat, mat, total_elements * sizeof(float complex));
     
     return node;
 }
-Node *create_1q_leaf(double complex a11, double complex a12, double complex a21, double complex a22) {
-    double complex mat[4] = {a11, a12, a21, a22};
+Node *create_1q_leaf(float complex a11, float complex a12, float complex a21, float complex a22) {
+    float complex mat[4] = {a11, a12, a21, a22};
     return create_leaf(mat, 1);
 }
 
@@ -93,9 +93,9 @@ Node *copy_node(Node *node) {
     
     if (node->gt == LEAF) {
         uint64_t total = node->dim * node->dim;
-        new_node->data.leaf.mat = malloc_custom(total * sizeof(double complex));
+        new_node->data.leaf.mat = malloc_custom(total * sizeof(float complex));
         assert(new_node->data.leaf.mat != NULL);
-        memcpy(new_node->data.leaf.mat, node->data.leaf.mat, total * sizeof(double complex));
+        memcpy(new_node->data.leaf.mat, node->data.leaf.mat, total * sizeof(float complex));
     }
     else {
         new_node->data.operation.left_child = copy_node(node->data.operation.left_child);
