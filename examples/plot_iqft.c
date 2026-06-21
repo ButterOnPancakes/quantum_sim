@@ -84,7 +84,7 @@ void plot_qregister(QuantumRegister *qreg, char* name, char* title, char *xaxis)
 
     fprintf(graph, "set xlabel '%s'\n", xaxis);
     fprintf(graph, "set xrange [0:%llu]\n", 1ULL << m);
-    fprintf(graph, "set ylabel 'Probabilité'\n");
+    fprintf(graph, "set ylabel 'Probabilité de mesurer x'\n");
     fprintf(graph, "set yrange [0:1]\n");
 
     fprintf(graph, "set style data histograms\n"); fprintf(graph, "set style fill solid 0.5\n");
@@ -110,7 +110,7 @@ void plot_spectrum(QuantumRegister *qreg, int64 a, int64 N, char* name, char* ti
 
     fprintf(graph, "set xlabel '%s'\n", xaxis);
     fprintf(graph, "set xrange [0:%d]\n", 16);
-    fprintf(graph, "set ylabel 'Probabilité'\n");
+    fprintf(graph, "set ylabel '$Probabilité de mesurer r$'\n");
     fprintf(graph, "set yrange [0:1]\n");
 
     fprintf(graph, "set style data histograms\n"); fprintf(graph, "set style fill solid 0.5\n");
@@ -156,10 +156,10 @@ int main() {
     }
     qregister_normalise(qreg);
 
-    plot_qregister(qreg, "before_iqft", "Avant QFT", "Etat");
+    plot_qregister(qreg, "before_iqft", "Registre 1 (Avant QFT)", "Valeur mesurable (|x>)");
     iqft(qreg);
-    plot_qregister(qreg, "after_iqft", "Après QFT", "Etat");
-    plot_spectrum(qreg, a, N, "after_traitement", "Après traitement", "Valeur de r");
+    plot_qregister(qreg, "after_iqft", "Registre 1 (Après QFT)", "Valeur mesurable (|x>)");
+    plot_spectrum(qreg, a, N, "after_traitement", "Registre 1 (Après traitement)", "Valeur de r");
 
     qregister_free(qreg);
 
