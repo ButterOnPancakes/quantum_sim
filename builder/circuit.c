@@ -232,3 +232,40 @@ void circuit_add_swap_gate(QuantumCircuit *qc, int q1, int q2) {
 
     free(term00); free(term11); free(term01); free(term10);
 }
+
+// Fonction utilitaire locale pour l'oracle
+static long long mod_exp_circuit(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base = base % mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) res = (res * base) % mod;
+        exp = exp >> 1;
+        base = (base * base) % mod;
+    }
+    return res;
+}
+
+void circuit_add_shor_oracle(QuantumCircuit *qc, int n_control, int n_target, int a, int N) {
+    int n_qbits = qc->nb_qbits;
+    uint64_t dim = 1ULL << n_qbits;
+    float complex *mat = calloc(dim * dim, sizeof(float complex));
+    
+    for (uint64_t i = 0; i < dim; i++) {
+        uint64_t x = i >> n_target;
+        uint64_t y = i & ((1ULL << n_target) - 1);
+        
+        uint64_t out_y = y;
+        if (y < (uint64_t)N) {
+            long long a_x = mod_exp_circuit(a, x, N);
+            out_y = (y * a_x) % N;
+        }
+        
+        uint64_t out_i = (x << n_target) | out_y;
+        mat[out_i * dim + i] = 1.0 + 0.0 * I;
+    }
+    
+    Node *oracle_node = create_leaf(mat, n_qbits);
+    free(mat);
+    
+    qc->root = create_product(oracle_node, qc->root);
+}

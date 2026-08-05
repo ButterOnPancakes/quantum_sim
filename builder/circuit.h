@@ -22,5 +22,6 @@ void circuit_add_cnot_gate(QuantumCircuit *qc, int control, int target);
 void circuit_add_cz_gate(QuantumCircuit *qc, int control, int target);
 void circuit_add_cphase_gate(QuantumCircuit *qc, int control, int target, double theta);
 void circuit_add_swap_gate(QuantumCircuit *qc, int qbit1, int qbit2);
+void circuit_add_shor_oracle(QuantumCircuit *qc, int n_control, int n_target, int a, int N);
 
 #endif
