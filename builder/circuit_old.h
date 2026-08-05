@@ -6,12 +6,13 @@
 #include <stdbool.h>
 #include <complex.h>
 
-typedef enum { ID, X, Z, H, MEAS, CNOT, ORACLE, S0 } GateType;
+typedef enum { ID, X, Z, H, MEAS, CNOT, ORACLE, S0, CPHASE, SWAP, SHOR_ORACLE } GateType;
 
 typedef struct {
     GateType type;
     bool (*f)(int *t, int n); // Oracle function
-    int params[3]; // 0 : target qbit, 1 : control qbit or bit measured
+    int params[3]; // 0 : target qbit, 1 : control qbit or bit measured, 2: extra param
+    double angle; // Used for CPHASE and other phase gates
 } Gate;
 
 typedef struct {
@@ -31,5 +32,8 @@ void add_single_qbit_gate(QuantumCircuit *circuit, int row, GateType g);
 void add_double_qbit_gate(QuantumCircuit *circuit, int row, int control, GateType g);
 void add_single_qbit_measure(QuantumCircuit *circuit, int row, int output);
 void add_multiple_qbit_gate(QuantumCircuit *circuit, int row, int nb_qbits, GateType g, bool (*f)(int *t, int n));
+void add_cphase_gate(QuantumCircuit *circuit, int target, int control, double angle);
+void add_swap_gate(QuantumCircuit *circuit, int q1, int q2);
+void add_shor_oracle(QuantumCircuit *circuit, int n_control, int n_target, int a, int N);
 
 #endif

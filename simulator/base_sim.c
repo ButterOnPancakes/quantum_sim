@@ -109,6 +109,61 @@ Matrix *get_S0_matrix(int n) {
     return S0;
 }
 
+Matrix *get_cphase_matrix(int n, int target, int control, double angle) {
+    int size = 1 << n;
+    Matrix *mat = matrix_zero(size, size);
+    for (int i = 0; i < size; i++) {
+        int bit_t = (i >> (n - 1 - target)) & 1;
+        int bit_c = (i >> (n - 1 - control)) & 1;
+        if (bit_t && bit_c) {
+            matrix_set(mat, i, i, cos(angle) + I * sin(angle));
+        } else {
+            matrix_set(mat, i, i, 1.0 + 0.0*I);
+        }
+    }
+    return mat;
+}
+
+Matrix *get_swap_matrix(int n, int q1, int q2) {
+    int size = 1 << n;
+    Matrix *mat = matrix_zero(size, size);
+    for (int i = 0; i < size; i++) {
+        int bit1 = (i >> (n - 1 - q1)) & 1;
+        int bit2 = (i >> (n - 1 - q2)) & 1;
+        int j = i;
+        if (bit1 != bit2) {
+            j ^= (1 << (n - 1 - q1));
+            j ^= (1 << (n - 1 - q2));
+        }
+        matrix_set(mat, j, i, 1.0 + 0.0*I);
+    }
+    return mat;
+}
+
+Matrix *get_shor_oracle_matrix_custom(int n, int n_control, int n_target, int a, int N) {
+    int size = 1 << n;
+    Matrix *mat = matrix_zero(size, size);
+    for (int state = 0; state < size; state++) {
+        int x = state >> n_target;
+        int y = state & ((1 << n_target) - 1);
+        int new_y = y;
+        if (y < N) {
+            long long ax = 1;
+            long long base = a % N;
+            int temp_x = x;
+            while (temp_x > 0) {
+                if (temp_x % 2 == 1) ax = (ax * base) % N;
+                temp_x >>= 1;
+                base = (base * base) % N;
+            }
+            new_y = (y * ax) % N;
+        }
+        int new_state = (x << n_target) | new_y;
+        matrix_set(mat, new_state, state, 1.0 + 0.0*I);
+    }
+    return mat;
+}
+
 Matrix *get_tensored_gate_matrix(Matrix *mat, int i, int n) {
     Matrix *gateMat;
     int k = reverse_power(matrix_nb_column(mat));
@@ -213,6 +268,15 @@ double circuit_execute(QuantumCircuit *circuit, float complex *statevector_mat, 
             if(gate->type == ORACLE) temp = get_oracle_matrix(gate->params[1], gate->f);
             gateMat = get_tensored_gate_matrix(temp, target, n);
             matrix_free(temp);
+        }
+        else if (gate->type == CPHASE) {
+            gateMat = get_cphase_matrix(n, target, gate->params[1], gate->angle);
+        }
+        else if (gate->type == SWAP) {
+            gateMat = get_swap_matrix(n, gate->params[0], gate->params[1]);
+        }
+        else if (gate->type == SHOR_ORACLE) {
+            gateMat = get_shor_oracle_matrix_custom(n, gate->params[0], gate->params[1], gate->params[2], (int)gate->angle);
         }
         else {
             Matrix *temp = matrix_of_array(2, 2, get_gate_matrix(get_corresponding_operator(gate->type, value)).matrix);
